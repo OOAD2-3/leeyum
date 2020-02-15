@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from sensitive_settings import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -86,13 +87,32 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'leeyum',
-        'HOST': '120.26.88.97',
-        'PORT': '3306',
-        'USER': 'root',
-        'PASSWORD': 'leeyum2020!'
+        'NAME': mysql_db_name,
+        'HOST': mysql_host,
+        'PORT': mysql_port,
+        'USER': mysql_user,
+        'PASSWORD': mysql_password
     }
 }
+
+# 配置Redis为Django缓存
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://:{}@{}:{}/0".format(redis_password, redis_host, redis_port),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+# 将session缓存在Redis中
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+# session 设置(可以不写)
+SESSION_COOKIE_AGE = 60 * 60 * 12
+SESSION_SAVE_EVERY_REQUEST = True
+# 关闭浏览器，则COOKIE失效
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 
 # Password validation
