@@ -1,5 +1,5 @@
 import re
-from random import random
+import random
 
 from leeyum.resource import exception
 

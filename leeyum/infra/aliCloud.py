@@ -57,6 +57,7 @@ class AliStorage(object):
     阿里仓储服务
     """
     def __init__(self):
+        return
         self.bucket_name = ''
         self.endpoint = ''
         self.bucket = oss2.Bucket(oss2.Auth(access_key_id, access_secret), self.endpoint, self.bucket_name)

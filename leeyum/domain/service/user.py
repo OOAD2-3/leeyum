@@ -41,7 +41,7 @@ class UserService(object):
             REDIS_CLIENT.put_object(phone_number, captcha, captcha_expired_time)
 
         captcha_code = captcha_generator(captcha_number)
-        put_in_redis(captcha_code)
+        # TODO 暂不可用 put_in_redis(captcha_code)
         # TODO 暂不可用 ALI_SMS.send_sms(phone_number, captcha_code)
         return captcha_code
 
