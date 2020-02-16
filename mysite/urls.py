@@ -20,8 +20,8 @@ from leeyum.views.user import UserViewSet
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^api-auth/', include('rest_framework.urls')),
+    path('api-auth/', include('rest_framework.urls')),
 
-    # 实验url
-    url(r'^api/user/test2/', UserViewSet.as_view({'get': 'get_captcha'}))
+    # api url
+    path('api/', include('leeyum.views.urls'))
 ]
