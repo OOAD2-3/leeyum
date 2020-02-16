@@ -50,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'leeyum.resource.middleware.CtxMiddleware',
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -114,6 +115,10 @@ SESSION_SAVE_EVERY_REQUEST = True
 # 关闭浏览器，则COOKIE失效
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
+# 引用Django自带的User表，继承使用时需要设置
+AUTH_USER_MODEL = 'leeyum.UserStore'
+AUTHENTICATION_BACKENDS = ('leeyum.resource.authentication.CaptchaModelBackend',
+                           'leeyum.resource.authentication.PasswordModelBackend')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators

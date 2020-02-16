@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+from leeyum.infra.redis import REDIS_CLIENT
 
 
 class ObjectStatus(object):
@@ -11,15 +14,30 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
-    gmt_modified = models.DateTimeField('修改时间')
-    gmt_created = models.DateTimeField('创建时间')
+    gmt_modified = models.DateTimeField('修改时间', auto_now=True)
+    gmt_created = models.DateTimeField('创建时间', auto_now_add=True)
 
 
-class UserStore(BaseModel):
+class UserStore(AbstractUser, BaseModel):
+    """
+    继承AbstractUser抽象类
+    用户信息表
+    """
     class Meta:
-        db_table = "leeyum_user"
+        db_table = "auth_user"
 
-    pass
+    phone_number = models.CharField('电话', max_length=11)
+    profile_avatar_url = models.CharField('头像', max_length=256)
+
+    def __str__(self):
+        return self.username + ' ' + self.phone_number
+
+    def check_captcha(self, phone_number, captcha):
+        """
+        验证传入短信验证码是否正确
+        """
+        redis_value = REDIS_CLIENT.get_object(phone_number)
+        return redis_value == captcha
 
 
 # class UserViewRel(BaseModel):
@@ -56,6 +74,7 @@ class CategoryStore(BaseModel):
     """
     类目
     """
+
     class Meta:
         db_table = "leeyum_category"
 
@@ -71,6 +90,7 @@ class ArticleStore(BaseModel):
     """
     信息模块
     """
+
     class Meta:
         db_table = "leeyum_article"
 
@@ -89,6 +109,7 @@ class CommentStore(BaseModel):
     """
     评论系统
     """
+
     class Meta:
         db_table = "leeyum_comment"
 

@@ -36,3 +36,8 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(models.CategoryStore)
 class CategoryAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(models.UserStore)
+class UserAdmin(admin.ModelAdmin):
+    pass

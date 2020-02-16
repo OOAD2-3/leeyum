@@ -17,13 +17,6 @@ class UserService(object):
     def logout(self):
         pass
 
-    def validate_captcha(self, phone_number, captcha):
-        """
-        验证传入短信验证码是否正确
-        """
-        redis_value = REDIS_CLIENT.get_object(phone_number)
-        return redis_value == captcha
-
     def generate_captcha(self, phone_number):
         """
         生成验证码并发送

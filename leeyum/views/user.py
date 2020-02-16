@@ -1,6 +1,4 @@
 # 参考文档：https://www.django-rest-framework.org/tutorial/1-serialization/
-from rest_framework import viewsets
-
 from leeyum.domain.service.user import USER_SERVICE
 from leeyum.views import BaseViewSet, BaseSerializer
 from leeyum.views import JSONResponse
