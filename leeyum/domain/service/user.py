@@ -1,6 +1,5 @@
-from random import random
-
 from leeyum.domain.utils import captcha_generator, validate_phone_number
+
 from leeyum.infra.aliCloud import ALI_SMS
 from leeyum.infra.redis import REDIS_CLIENT
 
@@ -11,7 +10,7 @@ class UserService(object):
     """
     用户
     """
-    def login(self):
+    def login(self, phone_number, captcha):
         pass
 
     def logout(self):

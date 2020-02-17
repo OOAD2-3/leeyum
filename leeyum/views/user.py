@@ -1,6 +1,11 @@
 # 参考文档：https://www.django-rest-framework.org/tutorial/1-serialization/
 from rest_framework.exceptions import ParseError
 
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
+
+from leeyum.domain.models import UserStore
+
 from leeyum.domain.service.user import USER_SERVICE
 from leeyum.views import BaseViewSet, BaseSerializer
 from leeyum.views import JSONResponse
@@ -33,5 +38,35 @@ class UserCommonViewSet(BaseViewSet):
 
 
 class UserViewSet(BaseViewSet):
+
+    def login(self, request):
+        phone_number = request.POST.get('phone_number')
+        captcha = request.POST.get('captcha')
+        if UserStore.objects.filter(phone_number=phone_number):
+            user = authenticate(phone_number=phone_number, captcha=captcha)
+            if user:
+                login(request, user)
+                return JSONResponse(code=200,
+                                    data={
+                                        'phone_number': user.phone_number
+                                    },
+                                    message='登录成功')
+            else:
+                return JSONResponse(message='登录失败')
+        else:
+            UserStore.objects.create_user(username=phone_number, phone_number=phone_number)
+            user = authenticate(phone_number=phone_number, captcha=captcha)
+            if user:
+                login(request, user)
+                return JSONResponse(code=200,
+                                    data={
+                                        'phone_number': user.phone_number
+                                    },
+                                    message='第一次登录成功')
+            else:
+                return JSONResponse(message='第一次登录失败')
+
+    @login_required
     def logout(self, request):
-        pass
+        logout(request)
+        return JSONResponse(message='登出成功')
