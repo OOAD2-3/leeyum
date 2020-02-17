@@ -20,12 +20,22 @@ class JSONResponse(JsonResponse):
         if data is None:
             data = {}
 
-        if code != 200:
-            message = 'error'
-
         res = {
             'code': code,
             'data': data,
             'message': message
         }
         JsonResponse.__init__(self, data=res)
+
+
+class ErrorResponse(JsonResponse):
+    def __init__(self, data=None, status=400, message='error'):
+        if data is None:
+            data = {}
+
+        err_res = {
+            'code': status,
+            'data': data,
+            'message': message
+        }
+        JsonResponse.__init__(self, data=err_res, status=status)

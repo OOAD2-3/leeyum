@@ -18,10 +18,8 @@ def captcha_generator(number):
     """
     result = ''
     for i in range(number):
-        index = random.randrange(0, 3)
-        if index != i and index + 1 != i:
-            result += chr(random.randint(97, 122))
-        elif index + 1 == i:
+        index = random.randrange(0, 2)
+        if index == 0:
             result += chr(random.randint(65, 90))
         else:
             result += str(random.randint(1, 9))

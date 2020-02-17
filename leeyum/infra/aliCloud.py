@@ -17,8 +17,8 @@ class AliSMS(object):
     version = '2017-05-25'
     action_name = 'SendSms'
 
-    sign_name = ''
-    template_code = ''
+    sign_name = '流云校园'
+    template_code = 'SMS_183791052'
 
     def __init__(self):
         self.client = AcsClient(access_key_id, access_secret, 'cn-hangzhou')
@@ -47,7 +47,7 @@ class AliSMS(object):
         """
         validate_phone_number(phone_number)
         self.request.add_query_param('PhoneNumbers', phone_number)
-        self.request.add_query_param('TemplateParam', code)
+        self.request.add_query_param('TemplateParam', {"code": code})
         response = self.client.do_action_with_exception(self.request)
         return response
 

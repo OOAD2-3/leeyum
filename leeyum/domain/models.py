@@ -32,7 +32,8 @@ class UserStore(AbstractUser, BaseModel):
     def __str__(self):
         return self.username + ' ' + self.phone_number
 
-    def check_captcha(self, phone_number, captcha):
+    @staticmethod
+    def check_captcha(phone_number, captcha):
         """
         验证传入短信验证码是否正确
         """
