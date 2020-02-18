@@ -27,11 +27,8 @@ class UserCommonViewSet(BaseViewSet):
         phone_number = request.GET.get('phone_number')
         if not phone_number:
             raise ParseError('phone_number does not exist')
-        res = USER_SERVICE.generate_captcha(str(phone_number))
-        if res:
-            return JSONResponse({'phone_number': phone_number}, message='验证码短信发送成功')
-        else:
-            return JSONResponse(code=500, message='验证码短信发送失败')
+        USER_SERVICE.generate_captcha(str(phone_number))
+        return JSONResponse({'phone_number': phone_number}, message='验证码短信发送成功')
 
     def login(self, request):
         pass
