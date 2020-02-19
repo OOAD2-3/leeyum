@@ -2,7 +2,6 @@ from rest_framework.exceptions import ValidationError
 
 from leeyum.domain.models import ArticleStore
 from leeyum.domain.service.article import ARTICLE_SERVICE
-from leeyum.domain.utils import model_2_dict
 from leeyum.views import BaseViewSet, BaseSerializer, JSONResponse
 
 

@@ -31,24 +31,6 @@ def captcha_generator(number):
     return result
 
 
-def model_2_dict(model):
-    result = model_to_dict(model)
-
-    def _check(item):
-        if type(item) is dict:
-            for key, value in item.items():
-                item[key] = _check(value)
-            return item
-        elif type(item) is list:
-            return [_check(obj) for obj in item]
-        elif isinstance(item, BaseModel):
-            return model_2_dict(item)
-        else:
-            return item
-
-    return _check(result)
-
-
 def to_sha1_string(string):
     now = time.time()
     string += str(now)
