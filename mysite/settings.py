@@ -109,8 +109,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # 引用Django自带的User表，继承使用时需要设置
 AUTH_USER_MODEL = 'leeyum.UserStore'
-AUTHENTICATION_BACKENDS = ('leeyum.resource.authentication.CaptchaModelBackend',
-                           'leeyum.resource.authentication.PasswordModelBackend')
+AUTHENTICATION_BACKENDS = ('leeyum.resource.backend.CaptchaModelBackend',
+                           'leeyum.resource.backend.PasswordModelBackend')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -138,9 +138,13 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',   # 基本认证
-        'rest_framework.authentication.SessionAuthentication',  # session认证
+        'leeyum.resource.authentication.CsrfExemptSessionAuthentication',  # session认证
     ],
-    "EXCEPTION_HANDLER": 'leeyum.resource.exception.custom_exception_handler'
+    "EXCEPTION_HANDLER": 'leeyum.resource.exception.custom_exception_handler',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ]
 }
 
 

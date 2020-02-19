@@ -1,6 +1,11 @@
 import re
 import random
+import hashlib
+import time
 
+from django.forms import model_to_dict
+
+from leeyum.domain.models import BaseModel
 from leeyum.resource import exception
 
 
@@ -24,3 +29,30 @@ def captcha_generator(number):
         else:
             result += str(random.randint(1, 9))
     return result
+
+
+def model_2_dict(model):
+    result = model_to_dict(model)
+
+    def _check(item):
+        if type(item) is dict:
+            for key, value in item.items():
+                item[key] = _check(value)
+            return item
+        elif type(item) is list:
+            return [_check(obj) for obj in item]
+        elif isinstance(item, BaseModel):
+            return model_2_dict(item)
+        else:
+            return item
+
+    return _check(result)
+
+
+def to_sha1_string(string):
+    now = time.time()
+    string += str(now)
+
+    sha = hashlib.sha1(string.encode('utf-8'))
+    encrypts = sha.hexdigest()
+    return encrypts

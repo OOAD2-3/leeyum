@@ -1,7 +1,7 @@
 import oss2
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.request import CommonRequest
-from leeyum.domain.utils import validate_phone_number
+from leeyum.domain.utils import validate_phone_number, to_sha1_string
 from sensitive_settings import access_key_id, access_secret
 
 __all__ = ('ALI_SMS', 'ALI_STORAGE')
@@ -57,14 +57,24 @@ class AliStorage(object):
     阿里仓储服务
     """
     def __init__(self):
-        return
-        self.bucket_name = ''
-        self.endpoint = ''
+        self.bucket_name = 'leeyum-bucket'
+        self.endpoint = 'oss-cn-hangzhou.aliyuncs.com'
         self.bucket = oss2.Bucket(oss2.Auth(access_key_id, access_secret), self.endpoint, self.bucket_name)
 
-    def upload(self, file):
-        file_name = ''
-        self.bucket.put_object(file_name, file)
+    def upload(self, file_name, file, prefix=''):
+        def get_file_name():
+            pic_name_format = '{}.{}'
+            name = ''
+            try:
+                suffix = file_name.split('.')[-1]
+                name = pic_name_format.format(to_sha1_string(file_name), suffix)
+            except:
+                name = to_sha1_string(file_name)
+
+            return name if not prefix else '{}.{}'.format(prefix, name)
+
+        result = self.bucket.put_object(get_file_name(), file)
+        return result
 
 
 ALI_SMS = AliSMS()

@@ -1,6 +1,9 @@
+from traceback import print_exc
+
 import six
+from django.http import Http404
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied, APIException
+from rest_framework.exceptions import APIException
 
 from leeyum.views import ErrorResponse
 
@@ -28,10 +31,23 @@ class RedisContactException(BusinessException):
     business_message = 'Redis Error occur'
 
 
+class FileTypeException(BusinessException):
+    business_code = 400
+    business_message = 'File Type Wrong'
+
+
+class FileTooBigException(BusinessException):
+    business_code = 400
+    business_message = 'File Too Big'
+
+
 def custom_exception_handler(exc, context):
     """
     DRF 统一异常处理函数
     """
+    # 打印异常至控制台 方便排查问题
+    print_exc()
+
     if isinstance(exc, BusinessException):
         return ErrorResponse(status=exc.business_code, message=exc.business_message)
 
@@ -45,6 +61,9 @@ def custom_exception_handler(exc, context):
             data['detail'] = exc_message
 
         return ErrorResponse(data, message=exc.detail, status=exc.status_code)
+
+    if isinstance(exc, Http404):
+        return ErrorResponse(status=status.HTTP_404_NOT_FOUND, message=str(exc))
 
     if isinstance(exc, Exception):
         return ErrorResponse(status=status.HTTP_500_INTERNAL_SERVER_ERROR, message=str(exc))
