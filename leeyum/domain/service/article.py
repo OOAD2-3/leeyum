@@ -41,6 +41,9 @@ class ArticleService(object):
             create_article.category_id = category_id
             create_article.save()
 
+            # 将文件置为已使用
+            FileUploadRecorder.use_these_files(pic_urls)
+
             # 同步至es中
             ARTICLE_INDEX_SERVICE.publish(create_article)
             return create_article
