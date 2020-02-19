@@ -6,7 +6,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
 from leeyum.domain.models import ArticleStore, FileUploadRecorder
-from leeyum.domain.utils import to_sha1_string
 from leeyum.infra.aliCloud import ALI_STORAGE
 from leeyum.resource.exception import FileTypeException, FileTooBigException
 
