@@ -57,7 +57,7 @@ class UserStore(AbstractUser, BaseModel):
     profile_avatar_url = models.CharField('头像', max_length=256, null=True, blank=True)
 
     def __str__(self):
-        return self.username + ' ' + self.phone_number
+        return '{} {}'.format(self.username, self.phone_number)
 
     @staticmethod
     def check_captcha(phone_number, captcha):
