@@ -2,7 +2,6 @@
 from rest_framework.exceptions import ParseError
 
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.decorators import login_required
 
 from leeyum.domain.models import UserStore
 
@@ -31,12 +30,9 @@ class UserCommonViewSet(BaseViewSet):
         return JSONResponse({'phone_number': phone_number}, message='验证码短信发送成功')
 
     def login(self, request):
-        pass
-
-
-class UserViewSet(BaseViewSet):
-
-    def login(self, request):
+        """
+        登录&注册
+        """
         phone_number = request.POST.get('phone_number')
         captcha = request.POST.get('captcha')
         if UserStore.objects.filter(phone_number=phone_number):
@@ -63,7 +59,9 @@ class UserViewSet(BaseViewSet):
             else:
                 return JSONResponse(message='第一次登录失败')
 
-    @login_required
+
+class UserViewSet(BaseViewSet):
+
     def logout(self, request):
         logout(request)
         return JSONResponse(message='登出成功')
