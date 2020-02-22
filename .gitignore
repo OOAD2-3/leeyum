@@ -2,3 +2,4 @@
 /venv
 *.pyc
 sensitive_settings.py
+/static

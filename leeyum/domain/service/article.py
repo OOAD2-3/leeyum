@@ -82,7 +82,7 @@ class ArticleService(object):
         if pic_file.size > max_size:
             raise FileTooBigException('file name: {}'.format(pic_file.name))
 
-        ali_result = ALI_STORAGE.upload(file_name=pic_file.name, file=pic_file, prefix=uploader.username)
+        ali_result = ALI_STORAGE.upload(file_name=pic_file.name, file=pic_file, uploader=uploader.username)
         pic_url = ali_result.resp.response.url
 
         file_upload_recorder, create = FileUploadRecorder \
