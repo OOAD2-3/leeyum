@@ -19,7 +19,7 @@ class ArticleAdmin(admin.ModelAdmin):
     def tags(obj):
         return [item.name for item in obj.tags.all()]
 
-    list_display = ('id', 'title', 'pic_urls', 'content', 'tags', 'category')
+    list_display = ('id', 'title', 'pic_urls', 'content', 'tags', 'category', 'publish_time')
     filter_horizontal = ('tags',)
 
 

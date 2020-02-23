@@ -83,5 +83,12 @@ class CategoryService(object):
         parent_category_list.reverse()
         return category, parent_category_list
 
+    def get_leaves(self, category_id):
+        # todo
+        # 通过category_id 获取该节点的所有最底层叶子类目
+        # 若category_id已经是最底层直接返回 [category_id]
+        # category_id格式错误或者找不到都返回空list
+        return []
+
 
 CATEGORY_SERVICE = CategoryService()

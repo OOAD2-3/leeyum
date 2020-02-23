@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from rest_framework.exceptions import ValidationError
 
 from leeyum.domain.models import ArticleStore
@@ -52,7 +53,23 @@ class ArticleViewSet(BaseViewSet):
         """
         搜索 + 全量
         """
-        return JSONResponse('123')
+        page = request.GET.get('page', 1)
+        page_size = request.GET.get('page_size', 10)
+        category = request.GET.get('category', -1)
+        tags = request.GET.get('tags', [])
+
+        is_main = request.GET.get('is_main')
+        if is_main is not None:
+            article_list = ARTICLE_SERVICE.show(category=category, tags=tags)
+        else:
+            keyword = request.GET.get('keyword')
+            article_list = ARTICLE_SERVICE.search(keyword=keyword, category=category, tags=tags)
+
+        paginator = Paginator(article_list, page_size)
+        page_info = paginator.page(page)
+
+        return JSONResponse({"article_list": page_info.object_list, "has_next_page": page_info.has_next(), "page": paginator.num_pages,
+                             "page_size": paginator.per_page, "total": paginator.count})
 
     def upload_file(self, request):
         request_file = request.FILES.get('file')

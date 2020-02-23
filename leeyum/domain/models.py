@@ -2,7 +2,7 @@ import json
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.db.models import ManyToManyField, DateTimeField, ForeignKey
+import django.utils.timezone as timezone
 
 from leeyum.infra.redis import REDIS_CLIENT
 
@@ -20,7 +20,7 @@ class BaseModel(models.Model):
     gmt_modified = models.DateTimeField('修改时间', auto_now=True)
     gmt_created = models.DateTimeField('创建时间', auto_now_add=True)
 
-    def to_dict(self, fields=None, exclude=('gmt_modified', 'gmt_created')):
+    def to_dict(self, fields=None, exclude=tuple()):
         data = {}
         for f in self._meta.concrete_fields + self._meta.many_to_many:
             value = f.value_from_object(self)
@@ -28,17 +28,19 @@ class BaseModel(models.Model):
             if fields and f.name not in fields:
                 continue
 
-            if exclude and f.name in exclude:
+            if f.name in exclude + ('gmt_modified', 'gmt_created'):
                 continue
 
-            if isinstance(f, ManyToManyField):
-                value = [item.to_dict() for item in getattr(self, f.name).all()]
+            if isinstance(f, models.ManyToManyField):
+                value = [item.to_dict() for item in getattr(self, f.name).all() if item]
 
-            if isinstance(f, ForeignKey):
-                value = getattr(self, f.name).to_dict()
+            if isinstance(f, models.ForeignKey):
+                value = getattr(self, f.name)
+                if value:
+                    value = value.to_dict()
 
-            if isinstance(f, DateTimeField):
-                value = value.strftime('%Y-%m-%d %H:%M:%S') if value else None
+            if isinstance(f, models.DateTimeField):
+                value = value.strftime('%Y-%m-%d %H:%M:%S') if value and getattr(value, 'strftime') else value
 
             data[f.name] = value
 
@@ -134,6 +136,7 @@ class ArticleStore(BaseModel):
     tags = models.ManyToManyField(TagStore)
     category = models.ForeignKey(CategoryStore, on_delete=models.DO_NOTHING, default=-1)
     publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING, default=-1)
+    publish_time = models.DateTimeField("发布时间", default=timezone.now)
 
     def __str__(self):
         return self.title
@@ -144,6 +147,10 @@ class ArticleStore(BaseModel):
             'body': body
         }
         return json.dumps(format_dict)
+
+    def concrete_article(self):
+        self.pic_urls = json.loads(self.pic_urls)
+        self.content = json.loads(self.content)
 
 
 class CommentStore(BaseModel):

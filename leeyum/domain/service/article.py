@@ -2,10 +2,13 @@ __all__ = ('ARTICLE_SERVICE',)
 
 import json
 
+from django.core.paginator import Paginator
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
 from leeyum.domain.models import ArticleStore, FileUploadRecorder
+from leeyum.domain.service.category import CATEGORY_SERVICE
 from leeyum.infra.aliCloud import ALI_STORAGE
 from leeyum.resource.exception import FileTypeException, FileTooBigException
 
@@ -14,11 +17,11 @@ class ArticleService(object):
     """
     信息
     """
+
     def get_details(self, article_id):
         article = get_object_or_404(ArticleStore, id=article_id)
 
-        article.pic_urls = json.loads(article.pic_urls)
-        article.content = json.loads(article.content)
+        article.concrete_article()
         return article
 
     def create(self, title, pic_urls, content, creator, *args, **kwargs):
@@ -51,6 +54,7 @@ class ArticleService(object):
 
     def update(self, article_id, *args, **kwargs):
         update_article = get_object_or_404(ArticleStore, id=article_id)
+        update_article.concrete_article()
 
         fields = ['title', 'content', 'pic_urls', 'tags_id', 'category_id']
         update_fields = []
@@ -76,7 +80,7 @@ class ArticleService(object):
     def upload_pic(self, pic_file, uploader):
         # 限制大小 限制类型
         restricted_type = ('image/png', 'image/jpg', 'image/jpeg')
-        max_size = 1024*1024*10
+        max_size = 1024 * 1024 * 10
         if pic_file.content_type not in restricted_type:
             raise FileTypeException('file name: {}'.format(pic_file.name))
         if pic_file.size > max_size:
@@ -94,13 +98,40 @@ class ArticleService(object):
         """
         修改文件使用记录
         """
-        db_pic_urls = json.loads(article.pic_urls)
 
-        deleted_pic_urls = [item for item in db_pic_urls if item not in pic_urls]
-        add_pic_urls = [item for item in pic_urls if item not in db_pic_urls]
+        deleted_pic_urls = [item for item in article.pic_urls if item not in pic_urls]
+        add_pic_urls = [item for item in pic_urls if item not in article.pic_urls]
 
         FileUploadRecorder.abandon_these_files(deleted_pic_urls)
         FileUploadRecorder.use_these_files(add_pic_urls)
+
+    def search(self, keyword, *args, **kwargs):
+        category = kwargs.get('category')
+        tags = kwargs.get('tags')
+
+        article_list = ARTICLE_INDEX_SERVICE.search(keyword, category, tags)
+
+        return article_list
+
+    def show(self, category, tags):
+        """
+        首页-兴趣推荐
+        """
+        q = Q()
+        if category and category > 0:
+            # category只能单选查询
+            category_leaves = CATEGORY_SERVICE.get_leaves(category_id=category)
+            q |= Q(category__in=category_leaves)
+        if tags:
+            # tag可以多选查询
+            q |= Q(tags__in=tags)
+
+        result = []
+        for article in ArticleStore.objects.filter(q):
+            article.concrete_article()
+            result.append(article.to_dict(exclude=('publisher',)))
+
+        return result
 
 
 class ArticleIndexService(object):
@@ -118,6 +149,13 @@ class ArticleIndexService(object):
         pass
 
     def update(self, article):
+        pass
+
+    def search(self, keyword, *args, **kwargs):
+        return []
+
+    @staticmethod
+    def format(es_obj):
         pass
 
 
