@@ -35,10 +35,10 @@ class TagService(object):
         return update_tag, update_fields
 
     def delete(self, tag_id, *args, **kwargs):
-        delete_tag = TagStore.objects.filter(id=tag_id)
+        delete_tag = get_object_or_404(TagStore, id=tag_id)
         if delete_tag:
             delete_tag.delete()
-        return delete_tag
+        return True
 
     def get_one(self, *args, **kwargs):
         tag_id = kwargs.get('tag_id')
@@ -60,6 +60,10 @@ class TagService(object):
 
         tags_model = TagStore.objects.filter(q)
         return list(tags_model)
+
+    def get_all(self, *args, **kwargs):
+        tags = TagStore.objects.filter()
+        return list(tags)
 
 
 TAG_SERVICE = TagService()

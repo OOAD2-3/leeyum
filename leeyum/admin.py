@@ -30,14 +30,25 @@ class CommentAdmin(admin.ModelAdmin):
 
 @admin.register(models.TagStore)
 class TagAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'intro')
 
 
 @admin.register(models.CategoryStore)
 class CategoryAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'intro', 'parent')
+    list_filter = ('parent',)
+    ordering = ('-parent',)
 
 
 @admin.register(models.UserStore)
 class UserAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('username', 'phone_number', 'email', 'is_superuser', 'last_login')
+    fieldsets = (
+        ('基本信息', {
+            'fields': ('username', 'phone_number', 'password', 'email', 'profile_avatar_url',),
+            }),
+        ('高级信息', {
+            'classes': ('collapse',),  # 把‘高级信息’默认折叠起来
+            'fields': (('is_superuser', 'is_staff', 'is_active'),),
+        })
+    )

@@ -1,6 +1,7 @@
 from django.db.models import Q
 
 from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import ValidationError
 from leeyum.domain.models import CategoryStore
 
 
@@ -15,11 +16,10 @@ class CategoryService(object):
         """
         新建类目
         """
-        parent = kwargs.get('parent')
+        parent_id = kwargs.get('parent_id')
         try:
             create_category = CategoryStore(name=name, intro=intro)
-            if parent:
-                create_category.parent.add(*parent)
+            create_category.parent_id = parent_id
 
             create_category.save()
             return create_category
@@ -32,13 +32,14 @@ class CategoryService(object):
         """
         update_category = get_object_or_404(CategoryStore, id=category_id)
 
-        fields = ['name', 'intro', 'parent']
+        fields = ['name', 'intro', 'parent_id']
         update_fields = []
 
         for f in fields:
             if kwargs.get(f):
                 update_fields.append(f)
                 value = kwargs.get(f)
+
                 setattr(update_category, f, value)
         update_category.save()
         return update_category, update_fields
@@ -53,14 +54,34 @@ class CategoryService(object):
         category_model = CategoryStore.objects.filter(q).first()
         return category_model
 
-    def list(self, *args, **kwargs):
+    def list_sub_categories(self, category_id, *args, **kwargs):
         """
-        展示相同父类目下的类目
+        列出该类目下的子类目
         """
-        q = Q()
+        category = get_object_or_404(CategoryStore, id=category_id)
+        category_data = CategoryStore.objects.filter(parent_id=category_id).values('id', 'name', 'intro')
+        sub_category_list = []
+        for cat in category_data:
+            sub_category_list.append({'id': cat['id'], 'name': cat['name'], 'intro': cat['intro']})
+        return category, sub_category_list
 
-    def get_parent(self, *args, **kwargs):
-        pass
+    def get_parent_category(self, category_id, *args, **kwargs):
+        """
+        根据子类目获取所有父类目信息
+        """
+        category = get_object_or_404(CategoryStore, id=category_id)
+        parent_category_list = []
+        parent_id = category.parent_id
+        while parent_id:
+            parent_category = get_object_or_404(CategoryStore, id=parent_id)
+            parent_category_list.append({'id': parent_category.id,
+                                         'name': parent_category.name,
+                                         'intro': parent_category.intro})
+            parent_id = parent_category.parent_id
+            continue
+
+        parent_category_list.reverse()
+        return category, parent_category_list
 
 
 CATEGORY_SERVICE = CategoryService()
