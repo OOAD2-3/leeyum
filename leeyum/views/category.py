@@ -29,20 +29,19 @@ class CategoryViewSet(BaseViewSet):
     def delete(self, request):
         pass
 
-    def list_sub_categories(self, request):
+    def list(self, request):
         """
-        列出该类目下的子类目
+        列出该类目及其子类目（多级）
+        未传category_id，则列出所有类目（层级关系）
         """
-        category_id = request.GET.get('category_id')
-        category, sub_category_list = CATEGORY_SERVICE.list_sub_categories(category_id=category_id)
-        return JSONResponse(data=
-                            {'category_id': category.id,
-                             'category_name': category.name,
-                             'sub_category_list': sub_category_list})
+        # 若无category_id传进来，默认为-1，即一级目录
+        category_id = request.GET.get('category_id', -1)
+        category_list = CATEGORY_SERVICE.list(category_id=category_id)
+        return JSONResponse(data=category_list)
 
     def get_parent_category(self, request):
         """
-        根据子类目获取父类目信息
+        获取类目信息及所属父类目
         """
         category_id = request.GET.get('category_id')
         category, parent_category_list = CATEGORY_SERVICE.get_parent_category(category_id=category_id)

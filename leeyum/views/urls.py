@@ -23,7 +23,7 @@ urlpatterns = [
     path('tag/', TagViewSet.as_view({'post': 'create', 'put': 'update', 'delete': 'delete'})),
     path('tag/all/', TagViewSet.as_view({'get': 'get_all_tags'})),
 
-    path('category/', CategoryViewSet.as_view({'post': 'create', 'put': 'update', 'get': 'list_sub_categories'})),
+    path('category/', CategoryViewSet.as_view({'post': 'create', 'put': 'update', 'get': 'list'})),
     # 暂且先用details
     path('category/details/', CategoryViewSet.as_view({'get': 'get_parent_category'}))
 ]

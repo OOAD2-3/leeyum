@@ -28,7 +28,7 @@ class TagViewSet(BaseViewSet):
 
     def get_all_tags(self, request):
         tag_list = TAG_SERVICE.get_all()
-        return JSONResponse(data={'tag_list': tag_list})
+        return JSONResponse(data=tag_list)
 
     def delete(self, request):
         tag_id = request.GET.get('tag_id')

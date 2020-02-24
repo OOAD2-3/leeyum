@@ -54,29 +54,38 @@ class CategoryService(object):
         category_model = CategoryStore.objects.filter(q).first()
         return category_model
 
-    def list_sub_categories(self, category_id, *args, **kwargs):
+    def list(self, category_id=-1, *args, **kwargs):
         """
-        列出该类目下的子类目
+        列出该类目及其子类目（多级）
+        未传category_id，则列出所有类目（层级关系）
         """
-        category = get_object_or_404(CategoryStore, id=category_id)
-        category_data = CategoryStore.objects.filter(parent_id=category_id).values('id', 'name', 'intro')
+        category_list = []
         sub_category_list = []
-        for cat in category_data:
-            sub_category_list.append({'id': cat['id'], 'name': cat['name'], 'intro': cat['intro']})
-        return category, sub_category_list
+        if category_id == -1:
+            categories = CategoryStore.objects.filter(parent__isnull=True)
+            for cat in categories:
+                category_list.extend(self.list(category_id=cat.id))
+        else:
+            category = get_object_or_404(CategoryStore, id=category_id)
+            category_list.append({'category_id': category.id, 'category_name': category.name, 'category_intro': category.intro, 'sub_category_list': sub_category_list})
+            sub_categories = category.sub_category.all()
+            for sub_cat in sub_categories:
+                sec_sub_category_list = []
+                sub_category_list.append({'category_id': sub_cat.id, 'category_name': sub_cat.name, 'category_intro': sub_cat.intro, 'sub_category_list': sec_sub_category_list})
+                for sec_sub_cat in sub_cat.sub_category.all():
+                    sec_sub_category_list.extend(self.list(category_id=sec_sub_cat.id))
+        return category_list
 
     def get_parent_category(self, category_id, *args, **kwargs):
         """
-        根据子类目获取所有父类目信息
+        获取类目信息及所属父类目
         """
         category = get_object_or_404(CategoryStore, id=category_id)
-        parent_category_list = []
+        parent_category_list = [category.name]
         parent_id = category.parent_id
         while parent_id:
             parent_category = get_object_or_404(CategoryStore, id=parent_id)
-            parent_category_list.append({'id': parent_category.id,
-                                         'name': parent_category.name,
-                                         'intro': parent_category.intro})
+            parent_category_list.append(parent_category.name)
             parent_id = parent_category.parent_id
             continue
 

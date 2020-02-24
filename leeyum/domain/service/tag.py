@@ -63,7 +63,10 @@ class TagService(object):
 
     def get_all(self, *args, **kwargs):
         tags = TagStore.objects.filter()
-        return list(tags)
+        tag_list = []
+        for tag in tags:
+            tag_list.append({'id': tag.id, 'name': tag.name, 'intro': tag.intro})
+        return tag_list
 
 
 TAG_SERVICE = TagService()
