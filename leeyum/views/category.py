@@ -49,3 +49,8 @@ class CategoryViewSet(BaseViewSet):
                                   'category_name': category.name,
                                   'category_intro': category.intro,
                                   'parent_category_list': parent_category_list})
+
+    def list_leaves(self, request):
+        category_id = request.GET.get('category_id')
+        leave_list = CATEGORY_SERVICE.get_leaves(category_id=category_id)
+        return JSONResponse(data=leave_list)

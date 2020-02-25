@@ -25,5 +25,6 @@ urlpatterns = [
 
     path('category/', CategoryViewSet.as_view({'post': 'create', 'put': 'update', 'get': 'list'})),
     # 暂且先用details
-    path('category/details/', CategoryViewSet.as_view({'get': 'get_parent_category'}))
+    path('category/details/', CategoryViewSet.as_view({'get': 'get_parent_category'})),
+    path('category/leaves/', CategoryViewSet.as_view({'get': 'list_leaves'}))
 ]

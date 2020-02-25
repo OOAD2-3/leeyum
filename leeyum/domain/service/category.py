@@ -67,11 +67,19 @@ class CategoryService(object):
                 category_list.extend(self.list(category_id=cat.id))
         else:
             category = get_object_or_404(CategoryStore, id=category_id)
-            category_list.append({'category_id': category.id, 'category_name': category.name, 'category_intro': category.intro, 'sub_category_list': sub_category_list})
+            category_list.append({
+                                'category_id': category.id,
+                                'category_name': category.name,
+                                'category_intro': category.intro,
+                                'sub_category_list': sub_category_list})
             sub_categories = category.sub_category.all()
             for sub_cat in sub_categories:
                 sec_sub_category_list = []
-                sub_category_list.append({'category_id': sub_cat.id, 'category_name': sub_cat.name, 'category_intro': sub_cat.intro, 'sub_category_list': sec_sub_category_list})
+                sub_category_list.append({
+                                        'category_id': sub_cat.id,
+                                        'category_name': sub_cat.name,
+                                        'category_intro': sub_cat.intro,
+                                        'sub_category_list': sec_sub_category_list})
                 for sec_sub_cat in sub_cat.sub_category.all():
                     sec_sub_category_list.extend(self.list(category_id=sec_sub_cat.id))
         return category_list
@@ -92,12 +100,20 @@ class CategoryService(object):
         parent_category_list.reverse()
         return category, parent_category_list
 
-    def get_leaves(self, category_id):
+    def get_leaves(self, category_id, *args, **kwargs):
         # todo
         # 通过category_id 获取该节点的所有最底层叶子类目
         # 若category_id已经是最底层直接返回 [category_id]
         # category_id格式错误或者找不到都返回空list
-        return []
+        leave_list = []
+        category = get_object_or_404(CategoryStore, id=category_id)
+        sub_categories = category.sub_category.all()
+        if sub_categories.count() == 0:
+            leave_list.append(category.id)
+        else:
+            for sub_cat in sub_categories:
+                leave_list.extend(self.get_leaves(category_id=sub_cat.id))
+        return leave_list
 
 
 CATEGORY_SERVICE = CategoryService()
