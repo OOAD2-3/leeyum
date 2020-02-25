@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 
 from leeyum.domain.models import ArticleStore, FileUploadRecorder
 from leeyum.domain.service.category import CATEGORY_SERVICE
+from leeyum.domain.utils import utc_to_datetime
 from leeyum.infra.aliCloud import ALI_STORAGE
 from leeyum.resource.exception import FileTypeException, FileTooBigException
 
@@ -131,13 +132,15 @@ class ArticleIndexService(object):
     elastic search
     """
 
-    __http_url = 'http://120.26.88.97:9200/article/_doc/{id}'
+    doc_url = 'http://120.26.88.97:9200/article/_doc/{doc_id}'
+    search_url = 'http://120.26.88.97:9200/article/_search'
 
-    def _write(self, article_id,  data):
-        return requests.put(self.__http_url, data=data)
+    def _write(self, article_id, data):
+        doc_id = 'article_{}'.format(article_id)
+        return requests.put(self.doc_url.format(doc_id=doc_id), data=data)
 
-    def _read(self):
-        pass
+    def _read(self, data):
+        return requests.get(self.search_url, data=data, headers={'Content-Type': 'application/json'})
 
     def publish(self, article):
         pass
@@ -151,11 +154,93 @@ class ArticleIndexService(object):
     def search(self, keyword, *args, **kwargs):
         category = kwargs.get('category')
         tags = kwargs.get('tags')
-        return []
+
+        # 请求es服务器
+        search_dsl = self._get_search_dsl(keyword, category, tags)
+        res = self._read(search_dsl)
+        res = json.loads(res.text)
+
+        res_data_list = res.get('hits', {}).get('hits', [])
+        return [self.format(res_data) for res_data in res_data_list]
 
     @staticmethod
     def format(es_obj):
-        pass
+        obj_id = es_obj.get('_id')
+        source = es_obj.get('_source', {})
+        article = ArticleStore()
+        article.id = obj_id
+        article.title = source.get('title')
+        article.content = source.get('content')
+        article.pic_urls = source.get('pic_urls')
+        article.tags = source.get('tags')
+        article.publish_time = utc_to_datetime(source.get('publish_time'))
+        article.publisher_id = source.get('publisher')
+        article.category_id = source.get('category')
+
+        return article.to_dict(exclude=('publisher',))
+
+    @staticmethod
+    def _get_search_dsl(keyword, category=None, tags=None):
+        if type(keyword) is list or type(keyword) is tuple:
+            keyword = ','.join(keyword)
+        base_search_dsl = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "nested": {
+                                            "path": "content",
+                                            "query": {
+                                                "match": {
+                                                    "content.body": keyword
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "match": {
+                                            "title": keyword
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "highlight": {
+                "fields": {
+                    "content.body": {},
+                    "title": {},
+                    "tags": {}
+                },
+                "pre_tags": "<123>",
+                "post_tags": "</123>"
+            }
+        }
+
+        if type(tags) is list or type(tags) is tuple:
+            tags = ','.join(tags)
+
+        if tags:
+            tag_dsl_part = {
+                "match": {
+                    "tags": tags
+                }
+            }
+            base_search_dsl['query']['bool']['must'].append(tag_dsl_part)
+
+        if category:
+            category_dsl_part = {
+                "match": {
+                    "category": category
+                }
+            }
+            base_search_dsl['query']['bool']['must'].append(category_dsl_part)
+        return json.dumps(base_search_dsl)
 
 
 ARTICLE_SERVICE = ArticleService()

@@ -154,6 +154,18 @@ class ArticleStore(BaseModel):
         self.content = json.loads(self.content)
         self.tags = json.loads(self.tags)
 
+    def to_dict(self, fields=None, exclude=tuple()):
+        result = BaseModel.to_dict(self, fields, exclude)
+        category = result.get('category', {})
+        category_format_list = []
+        while category is not None:
+            category_format_list.append(category.get('name'))
+            category = category.get('parent')
+
+        category_format_list.reverse()
+        result['category'] = category_format_list
+        return result
+
 
 class CommentStore(BaseModel):
     """

@@ -2,6 +2,7 @@ import re
 import random
 import hashlib
 import time
+from datetime import datetime
 
 from leeyum.resource import exception
 
@@ -35,3 +36,11 @@ def to_sha1_string(string):
     sha = hashlib.sha1(string.encode('utf-8'))
     encrypts = sha.hexdigest()
     return encrypts
+
+
+def datetime_to_utc(_datetime):
+    return _datetime.strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+
+def utc_to_datetime(utc_string):
+    return datetime.strptime(utc_string, "%Y-%m-%dT%H:%M:%S.%f")
