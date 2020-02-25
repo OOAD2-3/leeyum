@@ -2,7 +2,7 @@ __all__ = ('ARTICLE_SERVICE',)
 
 import json
 
-from django.core.paginator import Paginator
+import requests
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
@@ -24,22 +24,22 @@ class ArticleService(object):
         article.concrete_article()
         return article
 
-    def create(self, title, pic_urls, content, creator, *args, **kwargs):
+    def create(self, title, pic_urls, content_body, creator, *args, **kwargs):
         """
         新建
         """
-        tags_id = kwargs.get('tags_id', [])
+        tags = kwargs.get('tags', [])
         category_id = kwargs.get('category_id')
 
         if not category_id or type(category_id) is not int:
             raise ValidationError('新建article失败, 参数category_id格式错误 category_id = {}'.format(category_id))
 
         try:
-            content = ArticleStore.format_content(body=content)
+            content = ArticleStore.format_content(body=content_body)
             create_article = ArticleStore(title=title, pic_urls=json.dumps(pic_urls), content=content)
-            if tags_id:
-                create_article.tags.add(*tags_id)
-            create_article.publisher_id = creator.id
+            if tags:
+                create_article.tags = json.dumps(tags)
+            create_article.publisher_id = creator.id if creator.id is not None else 1
             create_article.category_id = category_id
             create_article.save()
 
@@ -56,7 +56,7 @@ class ArticleService(object):
         update_article = get_object_or_404(ArticleStore, id=article_id)
         update_article.concrete_article()
 
-        fields = ['title', 'content', 'pic_urls', 'tags_id', 'category_id']
+        fields = ['title', 'content', 'pic_urls', 'tags', 'category_id']
         update_fields = []
 
         for f in fields:
@@ -68,9 +68,8 @@ class ArticleService(object):
                 if f == 'pic_urls':
                     self.diff_pic(update_article, pic_urls=value)
                     value = json.dumps(value)
-                if f == 'tags_id':
-                    update_article.tags.add(*value)
-                    continue
+                if f == 'tags':
+                    value = json.dumps(value)
 
                 setattr(update_article, f, value)
 
@@ -105,14 +104,6 @@ class ArticleService(object):
         FileUploadRecorder.abandon_these_files(deleted_pic_urls)
         FileUploadRecorder.use_these_files(add_pic_urls)
 
-    def search(self, keyword, *args, **kwargs):
-        category = kwargs.get('category')
-        tags = kwargs.get('tags')
-
-        article_list = ARTICLE_INDEX_SERVICE.search(keyword, category, tags)
-
-        return article_list
-
     def show(self, category, tags):
         """
         首页-兴趣推荐
@@ -124,7 +115,8 @@ class ArticleService(object):
             q |= Q(category__in=category_leaves)
         if tags:
             # tag可以多选查询
-            q |= Q(tags__in=tags)
+            for tag in tags:
+                q |= Q(tags__contains=tag)
 
         result = []
         for article in ArticleStore.objects.filter(q):
@@ -136,10 +128,15 @@ class ArticleService(object):
 
 class ArticleIndexService(object):
     """
-    信息es存储
+    elastic search
     """
 
-    def init_model(self, model):
+    __http_url = 'http://120.26.88.97:9200/article/_doc/{id}'
+
+    def _write(self, article_id,  data):
+        return requests.put(self.__http_url, data=data)
+
+    def _read(self):
         pass
 
     def publish(self, article):
@@ -152,6 +149,8 @@ class ArticleIndexService(object):
         pass
 
     def search(self, keyword, *args, **kwargs):
+        category = kwargs.get('category')
+        tags = kwargs.get('tags')
         return []
 
     @staticmethod

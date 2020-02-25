@@ -36,6 +36,9 @@ class CategoryViewSet(BaseViewSet):
         """
         # 若无category_id传进来，默认为-1，即一级目录
         category_id = request.GET.get('category_id', -1)
+        if not category_id:
+            category_id = -1
+
         category_list = CATEGORY_SERVICE.list(category_id=category_id)
         return JSONResponse(data=category_list)
 

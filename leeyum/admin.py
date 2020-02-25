@@ -15,12 +15,9 @@ class ArticleAdmin(admin.ModelAdmin):
     # list_display_links 设置哪些字段可以点击进入编辑界面
     # list_filter 筛选器
     # search_fields 搜索器
-    @staticmethod
-    def tags(obj):
-        return [item.name for item in obj.tags.all()]
 
     list_display = ('id', 'title', 'pic_urls', 'content', 'tags', 'category', 'publish_time')
-    filter_horizontal = ('tags',)
+    # filter_horizontal = ('tags',)
 
 
 @admin.register(models.CommentStore)

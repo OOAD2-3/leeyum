@@ -2,7 +2,7 @@ from django.core.paginator import Paginator
 from rest_framework.exceptions import ValidationError
 
 from leeyum.domain.models import ArticleStore
-from leeyum.domain.service.article import ARTICLE_SERVICE
+from leeyum.domain.service.article import ARTICLE_SERVICE, ARTICLE_INDEX_SERVICE
 from leeyum.views import BaseViewSet, BaseSerializer, JSONResponse
 
 
@@ -18,11 +18,11 @@ class ArticleViewSet(BaseViewSet):
         title = request.json_data.get('title')
         pic_urls = request.json_data.get('pic_urls', [])
         content = request.json_data.get('content')
-        tags_id = request.json_data.get('tags_id', [])
+        tags = request.json_data.get('tags', [])
         category_id = request.json_data.get('category_id')
 
         article = ARTICLE_SERVICE \
-            .create(title=title, pic_urls=pic_urls, content=content, creator=request.user, tags_id=tags_id,
+            .create(title=title, pic_urls=pic_urls, content_body=content, creator=request.user, tags=tags,
                     category_id=category_id)
 
         return JSONResponse(data={'article_id': article.id})
@@ -32,11 +32,11 @@ class ArticleViewSet(BaseViewSet):
         title = request.json_data.get('title')
         pic_urls = request.json_data.get('pic_urls', [])
         content = request.json_data.get('content')
-        tags_id = request.json_data.get('tags_id', [])
+        tags = request.json_data.get('tags', [])
         category_id = request.json_data.get('category_id')
 
         article, update_fields = ARTICLE_SERVICE.update(article_id=article_id, title=title, pic_urls=pic_urls,
-                                                        content=content, tags_id=tags_id, category_id=category_id)
+                                                        content=content, tags=tags, category_id=category_id)
 
         return JSONResponse(data={'article_id': article.id, 'update_fields': update_fields})
 
@@ -55,15 +55,21 @@ class ArticleViewSet(BaseViewSet):
         """
         page = request.GET.get('page', 1)
         page_size = request.GET.get('page_size', 10)
-        category = request.GET.get('category', -1)
-        tags = request.GET.get('tags', [])
+        category = request.GET.get('category')
+        if category:
+            category = int(category)
+
+        # tags 参数使用,分割符传递
+        tags = request.GET.get('tags', '')
+        if tags:
+            tags = tags.split(',')
 
         is_main = request.GET.get('is_main')
         if is_main is not None:
             article_list = ARTICLE_SERVICE.show(category=category, tags=tags)
         else:
             keyword = request.GET.get('keyword')
-            article_list = ARTICLE_SERVICE.search(keyword=keyword, category=category, tags=tags)
+            article_list = ARTICLE_INDEX_SERVICE.search(keyword=keyword, category=category, tags=tags)
 
         paginator = Paginator(article_list, page_size)
         page_info = paginator.page(page)

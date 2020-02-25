@@ -65,6 +65,7 @@ class UserStore(AbstractUser, BaseModel):
     def check_captcha(phone_number, captcha):
         """
         验证传入短信验证码是否正确
+        todo 验证码记得处理
         """
         redis_value = REDIS_CLIENT.get_object(phone_number)
         # return redis_value == captcha
@@ -133,7 +134,7 @@ class ArticleStore(BaseModel):
     pic_urls = models.CharField('图片url', max_length=2048, null=True, blank=False)
     content = models.CharField('详情内容', max_length=1024, null=True, blank=True)
 
-    tags = models.ManyToManyField(TagStore)
+    tags = models.CharField('标签 拍平存储', max_length=1024, null=True, blank=True)
     category = models.ForeignKey(CategoryStore, on_delete=models.DO_NOTHING, default=-1)
     publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING, default=-1)
     publish_time = models.DateTimeField("发布时间", default=timezone.now)
@@ -151,6 +152,7 @@ class ArticleStore(BaseModel):
     def concrete_article(self):
         self.pic_urls = json.loads(self.pic_urls)
         self.content = json.loads(self.content)
+        self.tags = json.loads(self.tags)
 
 
 class CommentStore(BaseModel):

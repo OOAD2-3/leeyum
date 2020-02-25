@@ -3,9 +3,6 @@ import random
 import hashlib
 import time
 
-from django.forms import model_to_dict
-
-from leeyum.domain.models import BaseModel
 from leeyum.resource import exception
 
 
