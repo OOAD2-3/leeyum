@@ -51,6 +51,9 @@ class CategoryViewSet(BaseViewSet):
                                   'parent_category_list': parent_category_list})
 
     def list_leaves(self, request):
+        """
+        通过category_id 获取该节点的所有最底层叶子类目
+        """
         category_id = request.GET.get('category_id')
         leave_list = CATEGORY_SERVICE.get_leaves(category_id=category_id)
         return JSONResponse(data=leave_list)

@@ -106,13 +106,16 @@ class CategoryService(object):
         # 若category_id已经是最底层直接返回 [category_id]
         # category_id格式错误或者找不到都返回空list
         leave_list = []
-        category = get_object_or_404(CategoryStore, id=category_id)
-        sub_categories = category.sub_category.all()
-        if sub_categories.count() == 0:
-            leave_list.append(category.id)
+        category = CategoryStore.objects.filter(id=category_id).first()
+        if not category:
+            leave_list = []
         else:
-            for sub_cat in sub_categories:
-                leave_list.extend(self.get_leaves(category_id=sub_cat.id))
+            sub_categories = category.sub_category.all()
+            if sub_categories.count() == 0:
+                leave_list.append(category.id)
+            else:
+                for sub_cat in sub_categories:
+                    leave_list.extend(self.get_leaves(category_id=sub_cat.id))
         return leave_list
 
 
