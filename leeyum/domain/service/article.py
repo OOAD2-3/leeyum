@@ -42,6 +42,7 @@ class ArticleService(object):
                 create_article.tags = json.dumps(tags)
             create_article.publisher_id = creator.id if creator.id is not None else 1
             create_article.category_id = category_id
+            create_article.status = ArticleStore.NORMAL_STATUS
             create_article.save()
 
             # 将文件置为已使用
@@ -120,7 +121,7 @@ class ArticleService(object):
                 q |= Q(tags__contains=tag)
 
         result = []
-        for article in ArticleStore.objects.filter(q):
+        for article in ArticleStore.objects.filter(q).exclude(status=ArticleStore.DELETE_STATUS):
             article.concrete_article()
             result.append(article.to_dict(exclude=('publisher',)))
 
@@ -136,14 +137,23 @@ class ArticleIndexService(object):
     search_url = 'http://120.26.88.97:9200/article/_search'
 
     def _write(self, article_id, data):
-        doc_id = 'article_{}'.format(article_id)
-        return requests.put(self.doc_url.format(doc_id=doc_id), data=data)
+        return requests.put(self.doc_url.format(doc_id=article_id), data=data,
+                            headers={'Content-Type': 'application/json'})
 
     def _read(self, data):
         return requests.get(self.search_url, data=data, headers={'Content-Type': 'application/json'})
 
     def publish(self, article):
-        pass
+        data = article.generate_es_put_data()
+        res = self._write(article.id, data)
+
+        # 错误处理
+        res_error = None
+        if res_error:
+            article.status = ArticleStore.ES_ERROR_STATUS
+            article.save()
+
+        return res
 
     def delete(self, article):
         pass

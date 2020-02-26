@@ -1,15 +1,12 @@
 import json
+import copy
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import django.utils.timezone as timezone
 
+from leeyum.domain.utils import datetime_to_utc
 from leeyum.infra.redis import REDIS_CLIENT
-
-
-class ObjectStatus(object):
-    normal = 0
-    deleted = -1
 
 
 # Create your models here.
@@ -126,6 +123,9 @@ class ArticleStore(BaseModel):
     """
     信息模块
     """
+    NORMAL_STATUS = 0
+    DELETE_STATUS = -1
+    ES_ERROR_STATUS = 2
 
     class Meta:
         db_table = "leeyum_article"
@@ -139,6 +139,9 @@ class ArticleStore(BaseModel):
     publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING, default=-1)
     publish_time = models.DateTimeField("发布时间", default=timezone.now)
 
+    # 非es字段
+    status = models.IntegerField('状态', default=NORMAL_STATUS)
+
     def __str__(self):
         return self.title
 
@@ -150,9 +153,13 @@ class ArticleStore(BaseModel):
         return json.dumps(format_dict)
 
     def concrete_article(self):
-        self.pic_urls = json.loads(self.pic_urls)
-        self.content = json.loads(self.content)
-        self.tags = json.loads(self.tags)
+        """
+        具象化被拍平的字段
+        例如: '["www.baidu.com"]' ==> ["www.baidu.com"], str => list
+        """
+        self.pic_urls = json.loads(self.pic_urls) if type(self.pic_urls) is str else self.pic_urls
+        self.content = json.loads(self.content) if type(self.content) is str else self.content
+        self.tags = json.loads(self.tags) if type(self.tags) is str else self.tags
 
     def to_dict(self, fields=None, exclude=tuple()):
         result = BaseModel.to_dict(self, fields, exclude)
@@ -165,6 +172,20 @@ class ArticleStore(BaseModel):
         category_format_list.reverse()
         result['category'] = category_format_list
         return result
+
+    def generate_es_put_data(self):
+        # 具象化被拍平的字段
+        copy_article = copy.copy(self)
+        copy_article.concrete_article()
+        return {
+            "title": copy_article.title,
+            "pic_urls": copy_article.pic_urls,
+            "content": copy_article.content,
+            "tags": copy_article.tags,
+            "publish_time": datetime_to_utc(copy_article.publish_time),
+            "publisher": copy_article.publisher_id,
+            "category": copy_article.category_id
+        }
 
 
 class CommentStore(BaseModel):
