@@ -62,11 +62,9 @@ class UserStore(AbstractUser, BaseModel):
     def check_captcha(phone_number, captcha):
         """
         验证传入短信验证码是否正确
-        todo 验证码记得处理
         """
         redis_value = REDIS_CLIENT.get_object(phone_number)
-        # return redis_value == captcha
-        return True
+        return redis_value == captcha
 
 
 # class UserViewRel(BaseModel):
