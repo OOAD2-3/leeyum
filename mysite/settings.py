@@ -84,6 +84,7 @@ CORS_ALLOW_HEADERS = (
     'x-csrftoken',
     'x-requested-with',
     'Pragma',
+    'Set-Cookie'
 )
 
 ROOT_URLCONF = 'mysite.urls'
