@@ -6,6 +6,7 @@ from django.contrib.auth import login, authenticate, logout
 from leeyum.domain.models import UserStore
 
 from leeyum.domain.service.user import USER_SERVICE
+from leeyum.resource.exception import LoginException
 from leeyum.views import BaseViewSet, BaseSerializer
 from leeyum.views import JSONResponse
 
@@ -35,29 +36,20 @@ class UserCommonViewSet(BaseViewSet):
         """
         phone_number = request.POST.get('phone_number')
         captcha = request.POST.get('captcha')
-        if UserStore.objects.filter(phone_number=phone_number):
-            user = authenticate(phone_number=phone_number, captcha=captcha)
-            if user:
-                login(request, user)
-                return JSONResponse(code=200,
-                                    data={
-                                        'phone_number': user.phone_number
-                                    },
-                                    message='登录成功')
-            else:
-                return JSONResponse(message='登录失败')
-        else:
+
+        if not UserStore.objects.filter(phone_number=phone_number):
             UserStore.objects.create_user(username=phone_number, phone_number=phone_number)
-            user = authenticate(phone_number=phone_number, captcha=captcha)
-            if user:
-                login(request, user)
-                return JSONResponse(code=200,
-                                    data={
-                                        'phone_number': user.phone_number
-                                    },
-                                    message='第一次登录成功')
-            else:
-                return JSONResponse(message='第一次登录失败')
+
+        user = authenticate(phone_number=phone_number, captcha=captcha)
+        if user:
+            login(request, user)
+            return JSONResponse(code=200,
+                                data={
+                                    'phone_number': user.phone_number
+                                },
+                                message='登录成功')
+        else:
+            raise LoginException(message='登陆失败, phone_number: {}, captcha: {}'.format(phone_number, captcha))
 
 
 class UserViewSet(BaseViewSet):

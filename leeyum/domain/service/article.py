@@ -83,9 +83,9 @@ class ArticleService(object):
         restricted_type = ('image/png', 'image/jpg', 'image/jpeg')
         max_size = 1024 * 1024 * 10
         if pic_file.content_type not in restricted_type:
-            raise FileTypeException('file name: {}'.format(pic_file.name))
+            raise FileTypeException(message='file name: {}'.format(pic_file.name))
         if pic_file.size > max_size:
-            raise FileTooBigException('file name: {}'.format(pic_file.name))
+            raise FileTooBigException(message='file name: {}'.format(pic_file.name))
 
         ali_result = ALI_STORAGE.upload(file_name=pic_file.name, file=pic_file, uploader=uploader.username)
         pic_url = ali_result.resp.response.url

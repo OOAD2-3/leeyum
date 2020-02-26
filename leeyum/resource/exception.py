@@ -41,6 +41,11 @@ class FileTooBigException(BusinessException):
     business_message = 'File Too Big'
 
 
+class LoginException(BusinessException):
+    business_code = 400
+    business_message = 'Login Fail'
+
+
 def custom_exception_handler(exc, context):
     """
     DRF 统一异常处理函数

@@ -12,7 +12,7 @@ def validate_phone_number(phone_number):
     验证手机号是否合法
     """
     if not re.match(r"^1[35678]\d{9}$", phone_number):
-        raise exception.PhoneNumberWrongException('number({}) is illegal'.format(phone_number))
+        raise exception.PhoneNumberWrongException(message='number({}) is illegal'.format(phone_number))
 
 
 def captcha_generator(number):
