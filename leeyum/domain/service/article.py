@@ -1,4 +1,4 @@
-__all__ = ('ARTICLE_SERVICE',)
+__all__ = ('ARTICLE_SERVICE', 'ARTICLE_INDEX_SERVICE')
 
 import json
 

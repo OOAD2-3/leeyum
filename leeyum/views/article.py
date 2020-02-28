@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotAuthenticated
 
 from leeyum.domain.models import ArticleStore
 from leeyum.domain.service.article import ARTICLE_SERVICE, ARTICLE_INDEX_SERVICE
@@ -15,6 +15,9 @@ class ArticleSerializer(BaseSerializer):
 class ArticleViewSet(BaseViewSet):
 
     def create(self, request):
+        if not bool(request.user and request.user.is_authenticated):
+            raise NotAuthenticated("身份未认证")
+
         title = request.json_data.get('title')
         pic_urls = request.json_data.get('pic_urls', [])
         content = request.json_data.get('content')

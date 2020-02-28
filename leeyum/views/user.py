@@ -2,6 +2,7 @@
 from rest_framework.exceptions import ParseError
 
 from django.contrib.auth import login, authenticate, logout
+from rest_framework.permissions import IsAuthenticated
 
 from leeyum.domain.models import UserStore
 
@@ -16,9 +17,6 @@ class UserSerializer(BaseSerializer):
 
 
 class UserCommonViewSet(BaseViewSet):
-    # 无须登陆
-    authentication_classes = []
-    permission_classes = []
 
     def get_captcha(self, request):
         """
@@ -53,7 +51,15 @@ class UserCommonViewSet(BaseViewSet):
 
 
 class UserViewSet(BaseViewSet):
+    permission_classes = [IsAuthenticated]
 
     def logout(self, request):
         logout(request)
         return JSONResponse(message='登出成功')
+
+    def retrieve(self, request):
+        """
+        获取用户信息
+        """
+        now_user = request.user
+        return JSONResponse(data=now_user.to_dict(fields=('username', 'phone_number', 'profile_avatar_url')))

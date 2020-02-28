@@ -11,6 +11,7 @@ urlpatterns = [
 
     path('user/login/', UserCommonViewSet.as_view({'post': 'login'})),
     path('user/logout/', UserViewSet.as_view({'get': 'logout'})),
+    path('user/details/', UserViewSet.as_view({'get': 'retrieve'})),
 
     path('file/upload/', ArticleViewSet.as_view({'post': 'upload_file'})),
 
