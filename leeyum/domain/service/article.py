@@ -137,6 +137,8 @@ class ArticleIndexService(object):
     search_url = 'http://120.26.88.97:9200/article/_search'
 
     def _write(self, article_id, data):
+        if type(data) is not str:
+            data = json.dumps(data)
         return requests.put(self.doc_url.format(doc_id=article_id), data=data,
                             headers={'Content-Type': 'application/json'})
 
@@ -148,8 +150,7 @@ class ArticleIndexService(object):
         res = self._write(article.id, data)
 
         # 错误处理
-        res_error = None
-        if res_error:
+        if int(res.status_code/100) != 2:
             article.status = ArticleStore.ES_ERROR_STATUS
             article.save()
 
@@ -251,6 +252,10 @@ class ArticleIndexService(object):
             }
             base_search_dsl['query']['bool']['must'].append(category_dsl_part)
         return json.dumps(base_search_dsl)
+
+    def _backdoor_refresh_es_data(self):
+        for article in ArticleStore.objects.filter(status=ArticleStore.NORMAL_STATUS):
+            self.publish(article)
 
 
 ARTICLE_SERVICE = ArticleService()

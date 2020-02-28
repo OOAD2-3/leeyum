@@ -37,7 +37,8 @@ class BaseModel(models.Model):
                     value = value.to_dict()
 
             if isinstance(f, models.DateTimeField):
-                value = value.strftime('%Y-%m-%d %H:%M:%S') if value and getattr(value, 'strftime') else value
+                # value = value.strftime('%Y-%m-%d %H:%M:%S') if value and getattr(value, 'strftime') else value
+                value = value.strftime('%Y-%m-%d') if value and getattr(value, 'strftime') else value
 
             data[f.name] = value
 

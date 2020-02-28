@@ -1,5 +1,6 @@
 from django.contrib import admin
 from leeyum.domain import models
+from leeyum.domain.service.article import ARTICLE_INDEX_SERVICE
 
 admin.site.site_header = '流云校园'
 admin.site.site_title = '流云校园管理后台'
@@ -18,6 +19,10 @@ class ArticleAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'title', 'pic_urls', 'content', 'tags', 'category', 'publish_time')
     # filter_horizontal = ('tags',)
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        ARTICLE_INDEX_SERVICE.publish(obj)
 
 
 @admin.register(models.CommentStore)
