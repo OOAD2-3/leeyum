@@ -73,9 +73,12 @@ class ArticleAdmin(admin.ModelAdmin):
         return super().add_view(request, form_url='', extra_context=None)
 
     def save_model(self, request, obj, form, change):
-        self.message_user(request, 'hello 测试一下')
-        # super().save_model(request, obj, form, change)
-        # ARTICLE_INDEX_SERVICE.publish(obj)
+        super().save_model(request, obj, form, change)
+        ARTICLE_INDEX_SERVICE.publish(obj)
+
+    def delete_model(self, request, obj):
+        ARTICLE_INDEX_SERVICE.delete(obj.id)
+        super().delete_model(request, obj)
 
 
 @admin.register(models.CommentStore)

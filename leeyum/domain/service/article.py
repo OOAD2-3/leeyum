@@ -145,6 +145,9 @@ class ArticleIndexService(object):
     def _read(self, data):
         return requests.get(self.search_url, data=data, headers={'Content-Type': 'application/json'})
 
+    def _delete(self, article_id):
+        return requests.delete(self.doc_url.format(doc_id=article_id))
+
     def publish(self, article):
         data = article.generate_es_put_data()
         res = self._write(article.id, data)
@@ -156,8 +159,8 @@ class ArticleIndexService(object):
 
         return res
 
-    def delete(self, article):
-        pass
+    def delete(self, article_id):
+        self._delete(article_id)
 
     def update(self, article):
         pass
