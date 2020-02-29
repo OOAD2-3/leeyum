@@ -218,6 +218,11 @@ class ArticleIndexService(object):
                                         "match": {
                                             "title": keyword
                                         }
+                                    },
+                                    {
+                                        "match": {
+                                            "tags.keyword": keyword
+                                        }
                                     }
                                 ]
                             }
