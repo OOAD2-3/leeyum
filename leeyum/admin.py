@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from leeyum.domain import models
+from leeyum.domain.models import FileUploadRecorder
 from leeyum.domain.service.article import ARTICLE_INDEX_SERVICE
 
 admin.site.site_header = '流云校园'
@@ -78,6 +79,7 @@ class ArticleAdmin(admin.ModelAdmin):
 
     def delete_model(self, request, obj):
         ARTICLE_INDEX_SERVICE.delete(obj.id)
+        FileUploadRecorder.abandon_these_files(json.loads(obj.pic_urls))
         super().delete_model(request, obj)
 
 

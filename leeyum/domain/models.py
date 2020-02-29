@@ -218,22 +218,10 @@ class FileUploadRecorder(BaseModel):
 
     @staticmethod
     def use_these_files(file_urls):
-        file_recorder_list = FileUploadRecorder.objects.filter(file_url__in=file_urls)
-        for file_recorder in file_recorder_list:
-            if file_recorder is None:
-                continue
-
-            file_recorder.is_used = True
-            file_recorder.save()
+        file_recorder_list = FileUploadRecorder.objects.filter(file_url__in=file_urls).update(is_used=True)
         return file_recorder_list
 
     @staticmethod
     def abandon_these_files(file_urls):
-        file_recorder_list = FileUploadRecorder.objects.filter(file_url__in=file_urls)
-        for file_recorder in file_recorder_list:
-            if file_recorder is None:
-                continue
-
-            file_recorder.is_used = False
-            file_recorder.save()
+        file_recorder_list = FileUploadRecorder.objects.filter(file_url__in=file_urls).update(is_used=False)
         return file_recorder_list
