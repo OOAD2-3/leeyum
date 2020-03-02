@@ -125,6 +125,8 @@ class ArticleService(object):
             article.concrete_article()
             result.append(article.to_dict(exclude=('publisher',)))
 
+        result.reverse()
+
         return result
 
 
