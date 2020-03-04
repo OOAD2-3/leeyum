@@ -13,6 +13,7 @@ from leeyum.infra.redis import REDIS_CLIENT
 class BaseModel(models.Model):
     class Meta:
         abstract = True
+        ordering = ('id',)
 
     gmt_modified = models.DateTimeField('修改时间', auto_now=True)
     gmt_created = models.DateTimeField('创建时间', auto_now_add=True)
@@ -39,6 +40,9 @@ class BaseModel(models.Model):
             if isinstance(f, models.DateTimeField):
                 # value = value.strftime('%Y-%m-%d %H:%M:%S') if value and getattr(value, 'strftime') else value
                 value = value.strftime('%Y-%m-%d') if value and getattr(value, 'strftime') else value
+
+            if isinstance(value, models.expressions.CombinedExpression):
+                continue
 
             data[f.name] = value
 
@@ -225,3 +229,41 @@ class FileUploadRecorder(BaseModel):
     def abandon_these_files(file_urls):
         file_recorder_list = FileUploadRecorder.objects.filter(file_url__in=file_urls).update(is_used=False)
         return file_recorder_list
+
+
+class ActionDefinition(BaseModel):
+    """
+    动作定义表
+    """
+    class Meta:
+        db_table = "leeyum_action_definition"
+
+    USER_BEHAVIOUR = 1
+    SYSTEM_RECODER = 2
+
+    action_type = models.CharField('动作名', max_length=128, null=True, blank=True)
+    record_data = models.CharField('记录值', max_length=128, null=True, blank=True)
+    user = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING)
+
+    def __str__(self):
+        return '{}_{}'.format(self.action_type, self.record_data)
+
+
+class ActionTimeRecorder(BaseModel):
+    """
+    动作记录表
+    """
+    class Meta:
+        db_table = "leeyum_action_time_recorder"
+        unique_together = ('action_definition', 'record_date')
+
+    action_definition = models.ForeignKey(ActionDefinition, on_delete=models.DO_NOTHING, related_name='actions')
+    day_count = models.IntegerField('天记录值', null=True, blank=True, default=0)
+    week_count = models.IntegerField('周记录值（7天）', null=True, blank=True, default=0)
+    month_count = models.IntegerField('月记录值（30天）', null=True, blank=True, default=0)
+    total_count = models.IntegerField('总记录', null=True, blank=True, default=0)
+
+    week_ttl = models.IntegerField('周倒计时', default=1)
+    month_ttl = models.IntegerField('月倒计时', default=1)
+
+    record_date = models.DateField('记录时间', auto_now_add=True)

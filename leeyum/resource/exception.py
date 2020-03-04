@@ -46,6 +46,11 @@ class LoginException(BusinessException):
     business_message = 'Login Fail'
 
 
+class ActionRecordException(BusinessException):
+    business_code = 400
+    business_message = 'action record fail'
+
+
 def custom_exception_handler(exc, context):
     """
     DRF 统一异常处理函数

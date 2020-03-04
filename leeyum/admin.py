@@ -112,3 +112,41 @@ class UserAdmin(admin.ModelAdmin):
             'fields': (('is_superuser', 'is_staff', 'is_active'),),
         })
     )
+
+
+class MediaInline(admin.StackedInline):
+    model = models.ActionTimeRecorder
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if not self.has_view_or_change_permission(request):
+            queryset = queryset.none()
+        return queryset.reverse()
+
+
+@admin.register(models.ActionDefinition)
+class ActionDefinitionAdmin(admin.ModelAdmin):
+    inlines = [MediaInline]
+    list_display = ('action_type', 'record_data', 'user')
+    search_fields = ('action_type', 'record_data', 'user__phone_number')
+    list_filter = ('action_type', 'record_data', 'user__phone_number')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

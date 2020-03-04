@@ -1,5 +1,6 @@
 from django.urls import path
 
+from leeyum.views.action import ActionViewSet
 from leeyum.views.tag import TagViewSet
 from leeyum.views.user import UserCommonViewSet, UserViewSet
 from leeyum.views.article import ArticleViewSet
@@ -28,4 +29,8 @@ urlpatterns = [
     # 暂且先用details
     path('category/details/', CategoryViewSet.as_view({'get': 'get_parent_category'})),
     path('category/leaves/', CategoryViewSet.as_view({'get': 'list_leaves'}))
+]
+
+urlpatterns += [
+    path('action/record/', ActionViewSet.as_view({'post': 'record'}))
 ]

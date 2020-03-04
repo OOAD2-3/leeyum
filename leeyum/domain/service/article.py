@@ -172,7 +172,8 @@ class ArticleIndexService(object):
         tags = kwargs.get('tags')
 
         # 请求es服务器
-        search_dsl = self._get_search_dsl(keyword, category, tags)
+        keywords = keyword.split()
+        search_dsl = self._get_search_dsl(keywords, category, tags)
         res = self._read(search_dsl)
         res = json.loads(res.text)
 
@@ -196,40 +197,13 @@ class ArticleIndexService(object):
         return article.to_dict(exclude=('publisher',))
 
     @staticmethod
-    def _get_search_dsl(keyword, category=None, tags=None):
-        if type(keyword) is list or type(keyword) is tuple:
-            keyword = ','.join(keyword)
+    def _get_search_dsl(keywords, category=None, tags=None):
+        if type(keywords) is not list and type(keywords) is not tuple:
+            raise Exception()
         base_search_dsl = {
             "query": {
                 "bool": {
-                    "must": [
-                        {
-                            "bool": {
-                                "should": [
-                                    {
-                                        "nested": {
-                                            "path": "content",
-                                            "query": {
-                                                "match": {
-                                                    "content.body": keyword
-                                                }
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "match": {
-                                            "title": keyword
-                                        }
-                                    },
-                                    {
-                                        "match": {
-                                            "tags.keyword": keyword
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    ]
+                    "must": []
                 }
             },
             "highlight": {
@@ -242,6 +216,36 @@ class ArticleIndexService(object):
                 "post_tags": "</123>"
             }
         }
+        keywords_dsl_part = {
+            "bool": {
+                "should": []
+            }
+        }
+        for keyword in keywords:
+            keywords_should_dsl_part = [
+                {
+                    "nested": {
+                        "path": "content",
+                        "query": {
+                            "match_phrase": {
+                                "content.body": keyword
+                            }
+                        }
+                    }
+                },
+                {
+                    "match_phrase": {
+                        "title": keyword
+                    }
+                },
+                {
+                    "match_phrase": {
+                        "tags.keyword": keyword
+                    }
+                }
+            ]
+            keywords_dsl_part['bool']['should'].extend(keywords_should_dsl_part)
+        base_search_dsl['query']['bool']['must'].append(keywords_dsl_part)
 
         if type(tags) is list or type(tags) is tuple:
             tags = ','.join(tags)
