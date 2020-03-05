@@ -195,15 +195,19 @@ class CommentStore(BaseModel):
     """
     评论系统
     """
+    NORMAL_COMMENT = 0
+    REPORT_COMMENT = -1
 
     class Meta:
         db_table = "leeyum_comment"
 
-    comment_parents = models.IntegerField('评论回复上层id', default=0)
+    comment_parent = models.ForeignKey('self', on_delete=models.DO_NOTHING, related_name='sub_comment', null=True, blank=True, default=-1)
     comment_message = models.CharField('评论信息', max_length=1024, null=True, blank=True)
 
     comment_publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING)
     comment_article = models.ForeignKey(ArticleStore, on_delete=models.DO_NOTHING)
+
+    comment_type = models.IntegerField('评论类型', default=NORMAL_COMMENT)
 
     def __str__(self):
         return self.comment_message
