@@ -13,22 +13,20 @@ urlpatterns = [
     path('user/login/', UserCommonViewSet.as_view({'post': 'login'})),
     path('user/logout/', UserViewSet.as_view({'get': 'logout'})),
     path('user/details/', UserViewSet.as_view({'get': 'retrieve'})),
+    path('user/update/', UserViewSet.as_view({'post': 'update'})),
+    path('user/published/', UserViewSet.as_view({'get': 'list_published_article'})),
+    path('user/like/', UserViewSet.as_view({'post': 'add_like_article', 'get': 'list_like_article', 'delete': 'delete_like_article'})),
+    path('user/liked/', UserViewSet.as_view({'get': 'get_liked_times'})),
 
     path('file/upload/', ArticleViewSet.as_view({'post': 'upload_file'})),
 
     path('article/', ArticleViewSet.as_view({'post': 'create', 'put': 'update', 'get': 'list'})),
     path('article/details/', ArticleViewSet.as_view({'get': 'retrieve'})),
 
-
-    path('comment/', CommentViewSet.as_view({'post': 'create', 'get': 'list'})),
-
     path('tag/', TagViewSet.as_view({'post': 'create', 'put': 'update', 'delete': 'delete'})),
     path('tag/all/', TagViewSet.as_view({'get': 'get_all_tags'})),
 
-    path('category/', CategoryViewSet.as_view({'post': 'create', 'put': 'update', 'get': 'list'})),
-    # 暂且先用details
-    # path('category/details/', CategoryViewSet.as_view({'get': 'get_parent_category'})),
-    # path('category/leaves/', CategoryViewSet.as_view({'get': 'list_leaves'}))
+    path('category/', CategoryViewSet.as_view({'post': 'create', 'get': 'list'})),
 
     path('comment/', CommentViewSet.as_view({'post': 'create', 'get': 'list', 'delete': 'delete'}))
 ]

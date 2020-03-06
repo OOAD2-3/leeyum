@@ -63,3 +63,62 @@ class UserViewSet(BaseViewSet):
         """
         now_user = request.user
         return JSONResponse(data=now_user.to_dict(fields=('username', 'phone_number', 'profile_avatar_url')))
+
+    def update(self, request):
+        """
+        修改用户信息
+        """
+        now_user = request.user
+        username = request.json_data.get('username')
+        profile_avatar_url = request.json_data.get('profile_avatar_url')
+        update_user = USER_SERVICE.update(user=now_user, username=username,
+                                          profile_avatar_url=profile_avatar_url)
+        return JSONResponse(data=update_user.to_dict(fields=('username', 'phone_number', 'profile_avatar_url')))
+
+    def add_like_article(self, request):
+        """
+        添加收藏
+        """
+        user = request.user
+        article_id = request.GET.get('article_id')
+        like_article_list = USER_SERVICE.add_like_article(user=user, article_id=article_id)
+        return JSONResponse(data={'like_article_list': like_article_list})
+
+    def delete_like_article(self, request):
+        """
+        取消收藏
+        """
+        user = request.user
+        article_id = request.GET.get('article_id')
+        like_article_list = USER_SERVICE.delete_like_article(user=user, article_id=article_id)
+        return JSONResponse(data={'like_article_list': like_article_list})
+
+    def list_like_article(self, request):
+        """
+        获取收藏记录
+        """
+        user = request.user
+        like_article_list = USER_SERVICE.list_like_article(user=user)
+        return JSONResponse(data={'like_article_list': like_article_list})
+
+    def get_liked_times(self, request):
+        """
+        获取收藏次数
+        """
+        article_id = request.GET.get('article_id')
+        like_times = USER_SERVICE.get_liked_times(article_id=article_id)
+        return JSONResponse(data={'liked_times': like_times})
+
+    def list_published_article(self, request):
+        """
+        获取发布记录
+        """
+        user = request.user
+        published_article_list = USER_SERVICE.list_published_article(publisher=user)
+        return JSONResponse(data={'published_article_list': published_article_list})
+
+    def list_viewed_article(self, request):
+        """
+        获取浏览记录
+        """
+        pass

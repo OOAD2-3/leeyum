@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 from leeyum.domain.models import CategoryStore
 
-
 __all__ = ('CATEGORY_SERVICE',)
 
 
@@ -12,6 +11,7 @@ class CategoryService(object):
     """
     信息
     """
+
     def create(self, name, intro, *args, **kwargs):
         """
         新建类目
@@ -68,18 +68,18 @@ class CategoryService(object):
         else:
             category = get_object_or_404(CategoryStore, id=category_id)
             category_list.append({
-                                'category_id': category.id,
-                                'category_name': category.name,
-                                'category_intro': category.intro,
-                                'sub_category_list': sub_category_list})
+                'category_id': category.id,
+                'category_name': category.name,
+                'category_intro': category.intro,
+                'sub_category_list': sub_category_list})
             sub_categories = category.sub_category.all()
             for sub_cat in sub_categories:
                 sec_sub_category_list = []
                 sub_category_list.append({
-                                        'category_id': sub_cat.id,
-                                        'category_name': sub_cat.name,
-                                        'category_intro': sub_cat.intro,
-                                        'sub_category_list': sec_sub_category_list})
+                    'category_id': sub_cat.id,
+                    'category_name': sub_cat.name,
+                    'category_intro': sub_cat.intro,
+                    'sub_category_list': sec_sub_category_list})
                 for sec_sub_cat in sub_cat.sub_category.all():
                     sec_sub_category_list.extend(self.list(category_id=sec_sub_cat.id))
         return category_list

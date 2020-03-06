@@ -23,7 +23,8 @@ class CategoryViewSet(BaseViewSet):
         name = request.json_data.get('name')
         intro = request.json_data.get('intro')
         parent_id = request.json_data.get('parent_id')
-        category, update_fields = CATEGORY_SERVICE.update(category_id=category_id, name=name, intro=intro, parent_id=parent_id)
+        category, update_fields = CATEGORY_SERVICE.update(category_id=category_id, name=name, intro=intro,
+                                                          parent_id=parent_id)
         return JSONResponse(data={'category_id': category_id, 'update_fields': update_fields})
 
     def delete(self, request):
@@ -38,7 +39,6 @@ class CategoryViewSet(BaseViewSet):
         category_id = request.GET.get('category_id', -1)
         if not category_id:
             category_id = -1
-
         category_list = CATEGORY_SERVICE.list(category_id=category_id)
         return JSONResponse(data=category_list)
 

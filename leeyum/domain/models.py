@@ -59,6 +59,7 @@ class UserStore(AbstractUser, BaseModel):
 
     phone_number = models.CharField('电话', max_length=11, null=True, blank=False)
     profile_avatar_url = models.CharField('头像', max_length=256, null=True, blank=True)
+    like_article = models.ManyToManyField('ArticleStore')
 
     def __str__(self):
         return '{} {}'.format(self.username, self.phone_number)
