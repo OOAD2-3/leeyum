@@ -25,22 +25,20 @@ class ArticleService(object):
         article.concrete_article()
         return article
 
-    def create(self, title, pic_urls, content_body, creator, *args, **kwargs):
+    def create(self, title, pic_urls, content_details, creator, category_id, *args, **kwargs):
         """
         新建
         """
         tags = kwargs.get('tags', [])
-        category_id = kwargs.get('category_id')
 
         if not category_id or type(category_id) is not int:
             raise ValidationError('新建article失败, 参数category_id格式错误 category_id = {}'.format(category_id))
 
         try:
-            content = ArticleStore.format_content(body=content_body)
-            create_article = ArticleStore(title=title, pic_urls=json.dumps(pic_urls), content=content)
-            if tags:
-                create_article.tags = json.dumps(tags)
-            create_article.publisher_id = creator.id if creator.id is not None else 1
+            create_article = ArticleStore(title=title, publisher_id=creator.id)
+            create_article.pic_urls = json.dumps(pic_urls)
+            create_article.content = create_article.format_content(content_details)
+            create_article.tags = json.dumps(tags) if tags else "[]"
             create_article.category_id = category_id
             create_article.status = ArticleStore.NORMAL_STATUS
             create_article.save()
@@ -66,7 +64,7 @@ class ArticleService(object):
                 update_fields.append(f)
                 value = kwargs.get(f)
                 if f == 'content':
-                    value = ArticleStore.format_content(body=value)
+                    value = update_article.format_content(content_details=value)
                 if f == 'pic_urls':
                     self.diff_pic(update_article, pic_urls=value)
                     value = json.dumps(value)

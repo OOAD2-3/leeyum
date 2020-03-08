@@ -1,3 +1,5 @@
+import json
+
 from django.core.paginator import Paginator
 from rest_framework.exceptions import ValidationError, NotAuthenticated
 
@@ -20,12 +22,16 @@ class ArticleViewSet(BaseViewSet):
 
         title = request.json_data.get('title')
         pic_urls = request.json_data.get('pic_urls', [])
-        content = request.json_data.get('content')
+        content_details = request.json_data.get('content', {})
+        # 版本兼容处理
+        if type(content_details) is str:
+            content_details = {'body': content_details}
+
         tags = request.json_data.get('tags', [])
         category_id = request.json_data.get('category_id')
 
         article = ARTICLE_SERVICE \
-            .create(title=title, pic_urls=pic_urls, content_body=content, creator=request.user, tags=tags,
+            .create(title=title, pic_urls=pic_urls, content_details=content_details, creator=request.user, tags=tags,
                     category_id=category_id)
 
         return JSONResponse(data={'article_id': article.id})

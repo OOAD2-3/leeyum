@@ -45,8 +45,10 @@ class ArticleAdmin(admin.ModelAdmin):
         try:
             content = json.loads(obj.content)
             if content:
-                content_body = content.get('body', '')
-                html = '<div>详情(body): ' + content_body + '</div>'
+                html = ''
+                for k, v in content.items():
+                    html += '<div>{} {}: {}</div>'.format(obj.get_content_field_intro(k), k, v)
+
             else:
                 html = '-'
         except Exception as e:

@@ -54,6 +54,7 @@ class UserStore(AbstractUser, BaseModel):
     继承AbstractUser抽象类
     用户信息表
     """
+
     class Meta:
         db_table = "auth_user"
 
@@ -93,6 +94,7 @@ class TagStore(BaseModel):
     """
     标签
     """
+
     class Meta:
         db_table = "leeyum_tag"
 
@@ -117,7 +119,8 @@ class CategoryStore(BaseModel):
     name = models.CharField('类目名字', max_length=128, null=True, blank=False)
     intro = models.CharField('类目介绍', max_length=256, null=True, blank=True)
     # parent = models.IntegerField('上级id', default=0)
-    parent = models.ForeignKey('self', on_delete=models.DO_NOTHING, related_name='sub_category', null=True, blank=True, default=-1)
+    parent = models.ForeignKey('self', on_delete=models.DO_NOTHING, related_name='sub_category', null=True, blank=True,
+                               default=-1)
 
     def __str__(self):
         return self.name
@@ -131,12 +134,29 @@ class ArticleStore(BaseModel):
     DELETE_STATUS = -1
     ES_ERROR_STATUS = 2
 
+    content_fields = ['body',
+                      'price', 'new_or_old', 'time_span',
+                      'time', 'place', 'total_number',
+                      'time', 'place', 'price', 'target_grade', 'sex_require']
+
+    full_content_fields_intro = {
+        'body': '详情',
+        'price': '价格',
+        'new_or_old': '崭新程度',
+        'time_span': '租售时长',
+        'time': '时间',
+        'place': '地点',
+        'total_number': '总人数',
+        'now_number': '当前人数',
+        'team_members': '队伍成员信息'
+    }
+
     class Meta:
         db_table = "leeyum_article"
 
     title = models.CharField('标题', max_length=1024, null=True, blank=False)
     pic_urls = models.CharField('图片url', max_length=2048, null=True, blank=False)
-    content = models.CharField('详情内容', max_length=1024*10, null=True, blank=True)
+    content = models.CharField('详情内容', max_length=1024 * 10, null=True, blank=True)
 
     tags = models.CharField('标签 拍平存储', max_length=1024, null=True, blank=True)
     category = models.ForeignKey(CategoryStore, on_delete=models.DO_NOTHING, default=-1)
@@ -149,12 +169,23 @@ class ArticleStore(BaseModel):
     def __str__(self):
         return self.title
 
-    @staticmethod
-    def format_content(body):
-        format_dict = {
-            'body': body
-        }
+    def format_content(self, content_details, **kwargs):
+        format_dict = {}
+        for field in set(self.content_fields):
+            if content_details.get(field):
+                format_dict[field] = content_details.get(field)
+
+                # 发布为组队信息，冗余队长信息，初始化队员信息
+                if field == 'total_number':
+                    leader = self.publisher.to_dict(fields=('phone_number',))
+                    leader.update({'is_leader': True})
+                    format_dict['team_members'] = [leader]
+                    format_dict['now_number'] = 1
+
         return json.dumps(format_dict)
+
+    def get_content_field_intro(self, field_name):
+        return self.full_content_fields_intro.get(field_name, 'unexpect field')
 
     def concrete_article(self):
         """
@@ -218,6 +249,7 @@ class FileUploadRecorder(BaseModel):
     """
     文件上传记录，主要为图片
     """
+
     class Meta:
         db_table = "leeyum_file_upload"
 
@@ -240,6 +272,7 @@ class ActionDefinition(BaseModel):
     """
     动作定义表
     """
+
     class Meta:
         db_table = "leeyum_action_definition"
 
@@ -258,6 +291,7 @@ class ActionTimeRecorder(BaseModel):
     """
     动作记录表
     """
+
     class Meta:
         db_table = "leeyum_action_time_recorder"
         unique_together = ('action_definition', 'record_date')
