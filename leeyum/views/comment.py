@@ -28,6 +28,9 @@ class CommentViewSet(BaseViewSet):
         return JSONResponse(data=comment_list)
 
     def delete(self, request):
+        if not bool(request.user and request.user.is_authenticated):
+            raise NotAuthenticated("身份未认证")
+        user = request.user
         comment_id = request.GET.get('comment_id')
-        COMMENT_SERVICE.delete(comment_id=comment_id)
+        COMMENT_SERVICE.delete(user=user, comment_id=comment_id)
         return JSONResponse(message='delete success')

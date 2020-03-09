@@ -75,8 +75,7 @@ class UserService(object):
         """
         article = get_object_or_404(ArticleStore, id=article_id)
         user.like_article.remove(article)
-        like_article_list = self.list_like_article(user=user)
-        return like_article_list
+        return True
 
     def list_like_article(self, user, *args, **kwargs):
         """
@@ -88,23 +87,37 @@ class UserService(object):
             like_article_list.append(article.id)
         return like_article_list
 
-    def get_liked_times_by_article(self, article_id, *args, **kwargs):
+    def get_liked_times(self, user, article_id=-1, *args, **kwargs):
         """
         获取article被收藏次数
         """
-        article = get_object_or_404(ArticleStore, id=article_id)
-        liked_times = article.userstore_set.all().count()
+        if article_id == -1:
+            liked_times = self.get_liked_times_by_user(user=user)
+        else:
+            article = get_object_or_404(ArticleStore, id=article_id)
+            liked_times = article.userstore_set.all().count()
         return liked_times
 
     def get_liked_times_by_user(self, user, *args, **kwargs):
         """
         获取user下的article被收藏总次数
         """
-        articles = self.list_published_article(publisher=user)
-        like_times = 0
-        for article in articles:
-            like_times = like_times + self.get_liked_times_by_article(article_id=article.id)
-        return like_times
+        published_article_list = self.list_published_article(publisher=user)
+        liked_times = 0
+        for article_id in published_article_list:
+            liked_times = liked_times + self.get_liked_times(article_id=article_id, user=user)
+            continue
+        return liked_times
+
+    def add_viewed_article(self, user, article_id, *args, **kwargs):
+        # 浏览记录为30条
+        REDIS_CLIENT.put_history(name=user.id, value=article_id)
+        return True
+
+    def list_viewed_article(self, user, *args, **kwargs):
+        viewed_article_id = REDIS_CLIENT.get_history(name=user.id)
+        print(viewed_article_id)
+        return viewed_article_id
 
 
 USER_SERVICE = UserService()

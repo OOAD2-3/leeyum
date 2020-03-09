@@ -82,12 +82,6 @@ class UserStore(AbstractUser, BaseModel):
 #     user_view_user_id = models.IntegerField('浏览者id', default=-1)
 #
 #
-# class UserLikeRel(BaseModel):
-#     """
-#     喜欢记录
-#     """
-#     user_like_case_id = models.IntegerField('喜欢记录id', default=-1)
-#     user_like_user_id = models.IntegerField('喜欢者id', default=-1)
 
 
 class TagStore(BaseModel):
@@ -243,8 +237,6 @@ class CommentStore(BaseModel):
     """
     评论系统
     """
-    NORMAL_COMMENT = 0
-    REPORT_COMMENT = -1
 
     class Meta:
         db_table = "leeyum_comment"
@@ -255,10 +247,25 @@ class CommentStore(BaseModel):
     comment_publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING)
     comment_article = models.ForeignKey(ArticleStore, on_delete=models.DO_NOTHING)
 
-    comment_type = models.IntegerField('评论类型', default=NORMAL_COMMENT)
-
     def __str__(self):
         return self.comment_message
+
+
+class ReportStore(BaseModel):
+    """
+    举报系统
+    """
+
+    class Meta:
+        db_table = "leeyum_report"
+
+    report_article = models.ForeignKey(ArticleStore, on_delete=models.DO_NOTHING, null=True, blank=True)
+    report_comment = models.ForeignKey(CommentStore, on_delete=models.DO_NOTHING, null=True, blank=True)
+    report_reason = models.CharField('举报原因', max_length=1024, null=True, blank=True)
+    reporter = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING)
+
+    def __str__(self):
+        return '{}_{}'.format(self.report_article, self.report_reason)
 
 
 class FileUploadRecorder(BaseModel):

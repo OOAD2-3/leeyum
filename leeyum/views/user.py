@@ -90,8 +90,8 @@ class UserViewSet(BaseViewSet):
         """
         user = request.user
         article_id = request.GET.get('article_id')
-        like_article_list = USER_SERVICE.delete_like_article(user=user, article_id=article_id)
-        return JSONResponse(data={'like_article_list': like_article_list})
+        USER_SERVICE.delete_like_article(user=user, article_id=article_id)
+        return JSONResponse(message="delete like article success")
 
     def list_like_article(self, request):
         """
@@ -104,9 +104,13 @@ class UserViewSet(BaseViewSet):
     def get_liked_times(self, request):
         """
         获取收藏次数
+        若未传article_id，获取用户发文被收藏总次数
         """
-        article_id = request.GET.get('article_id')
-        like_times = USER_SERVICE.get_liked_times(article_id=article_id)
+        user = request.user
+        article_id = request.GET.get('article_id', -1)
+        if not article_id:
+            article_id = -1
+        like_times = USER_SERVICE.get_liked_times(article_id=article_id, user=user)
         return JSONResponse(data={'liked_times': like_times})
 
     def list_published_article(self, request):
@@ -117,8 +121,19 @@ class UserViewSet(BaseViewSet):
         published_article_list = USER_SERVICE.list_published_article(publisher=user)
         return JSONResponse(data={'published_article_list': published_article_list})
 
+    def add_viewed_article(self, request):
+        """
+        添加浏览记录
+        """
+        user = request.user
+        article_id = request.json_data.get('article_id')
+        USER_SERVICE.add_viewed_article(user=user, article_id=article_id)
+        return JSONResponse(data={'viewed_article_id': article_id})
+
     def list_viewed_article(self, request):
         """
         获取浏览记录
         """
-        pass
+        user = request.user
+        viewed_article_list = USER_SERVICE.list_viewed_article(user=user)
+        return JSONResponse(data={'viewed_article_list': viewed_article_list})

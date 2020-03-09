@@ -1,6 +1,7 @@
 from django.urls import path
 
 from leeyum.views.action import ActionViewSet
+from leeyum.views.report import ReportViewSet
 from leeyum.views.tag import TagViewSet
 from leeyum.views.user import UserCommonViewSet, UserViewSet
 from leeyum.views.article import ArticleViewSet
@@ -17,6 +18,7 @@ urlpatterns = [
     path('user/published/', UserViewSet.as_view({'get': 'list_published_article'})),
     path('user/like/', UserViewSet.as_view({'post': 'add_like_article', 'get': 'list_like_article', 'delete': 'delete_like_article'})),
     path('user/liked/', UserViewSet.as_view({'get': 'get_liked_times'})),
+    path('user/viewed/', UserViewSet.as_view({'get': 'list_viewed_article', 'post': 'add_viewed_article'})),
 
     path('file/upload/', ArticleViewSet.as_view({'post': 'upload_file'})),
 
@@ -30,7 +32,9 @@ urlpatterns = [
 
     path('category/', CategoryViewSet.as_view({'post': 'create', 'get': 'list'})),
 
-    path('comment/', CommentViewSet.as_view({'post': 'create', 'get': 'list', 'delete': 'delete'}))
+    path('comment/', CommentViewSet.as_view({'post': 'create', 'get': 'list', 'delete': 'delete'})),
+
+    path('report/', ReportViewSet.as_view({'post': 'create','delete': 'cancel', 'get': 'get_reported_times'}))
 ]
 
 urlpatterns += [
