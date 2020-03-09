@@ -50,12 +50,18 @@ class ArticleViewSet(BaseViewSet):
         return JSONResponse(data={'article_id': article.id, 'update_fields': update_fields})
 
     def retrieve(self, request):
-        article_id = request.GET.get('id')
-        res = ARTICLE_SERVICE.get_details(article_id)
+        reader = request.user if bool(request.user and request.user.is_authenticated) else None
 
-        dict_res = res.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created'))
-        publisher = res.publisher.to_dict(fields=('username',))
+        article_id = request.GET.get('id')
+        article = ARTICLE_SERVICE.get_details(article_id)
+
+        dict_res = article.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created'))
+        publisher = article.publisher.to_dict(fields=('username',))
         dict_res['publisher'] = publisher
+
+        if article.is_team_type() and reader:
+            dict_res['team_has_joined'] = ARTICLE_SERVICE.is_inside_team(article, reader)
+
         return JSONResponse(data=dict_res)
 
     def list(self, request):
@@ -93,3 +99,19 @@ class ArticleViewSet(BaseViewSet):
 
         file_upload_recorder = ARTICLE_SERVICE.upload_pic(pic_file=request_file, uploader=request.user)
         return JSONResponse(data=file_upload_recorder.to_dict())
+
+    def join_team(self, request):
+        if not bool(request.user and request.user.is_authenticated):
+            raise NotAuthenticated("身份未认证")
+
+        article_id = request.json_data.get('article_id')
+        res = ARTICLE_SERVICE.join_team(article_id=article_id, user=request.user)
+        return JSONResponse(res.concrete_article().to_dict(exclude=('publisher',)))
+
+    def leave_team(self, request):
+        if not bool(request.user and request.user.is_authenticated):
+            raise NotAuthenticated("身份未认证")
+
+        article_id = request.json_data.get('article_id')
+        res = ARTICLE_SERVICE.leave_team(article_id=article_id, user=request.user)
+        return JSONResponse(res.concrete_article().to_dict(exclude=('publisher',)))

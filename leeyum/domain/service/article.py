@@ -3,6 +3,7 @@ __all__ = ('ARTICLE_SERVICE', 'ARTICLE_INDEX_SERVICE')
 import json
 
 import requests
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
@@ -11,7 +12,7 @@ from leeyum.domain.models import ArticleStore, FileUploadRecorder
 from leeyum.domain.service.category import CATEGORY_SERVICE
 from leeyum.domain.utils import utc_to_datetime
 from leeyum.infra.aliCloud import ALI_STORAGE
-from leeyum.resource.exception import FileTypeException, FileTooBigException
+from leeyum.resource.exception import FileTypeException, FileTooBigException, JoinTeamException
 
 
 class ArticleService(object):
@@ -127,6 +128,53 @@ class ArticleService(object):
 
         return result
 
+    @transaction.atomic
+    def join_team(self, article_id, user):
+        team_article = ArticleStore.objects.select_for_update().get(id=article_id)
+        team_article.concrete_article()
+
+        if not team_article.is_team_type():
+            raise JoinTeamException(message='article({}) is not team article'.format(article_id))
+        if team_article.content.get('total_number') <= team_article.content.get('now_number', 999):
+            raise JoinTeamException(message='article({}) has full members'.format(article_id))
+        if user.phone_number in [member.get('phone_number') for member in team_article.content.get('team_members')]:
+            raise JoinTeamException(message='user({}) has been join article({})'.format(user.phone_number, article_id))
+
+        team_article.content['now_number'] += 1
+        user = user.to_dict(fields=('phone_number',))
+        user.update({'is_leader': False})
+        team_article.content.get('team_members', []).append(user)
+
+        team_article.flat_article()
+        team_article.save()
+
+        return team_article
+
+    @transaction.atomic
+    def leave_team(self, article_id, user):
+        team_article = ArticleStore.objects.select_for_update().get(id=article_id)
+        team_article.concrete_article()
+
+        if not team_article.is_team_type():
+            raise JoinTeamException(message='article({}) is not team article'.format(article_id))
+        if not self.is_inside_team(team_article, user):
+            raise JoinTeamException(message='user({}) not in article({})'.format(user.phone_number, article_id))
+
+        team_article.content['now_number'] -= 1
+        team_article.content['team_members'] = [member for member in team_article.content.get('team_members', []) if
+                                                member.get('phone_number') != user.phone_number]
+
+        team_article.flat_article()
+        team_article.save()
+
+        return team_article
+
+    def is_inside_team(self, article, user):
+        if type(article.content) is str:
+            article.concrete_article()
+
+        return user.phone_number in [member.get('phone_number') for member in article.content.get('team_members')]
+
 
 class ArticleIndexService(object):
     """
@@ -153,7 +201,7 @@ class ArticleIndexService(object):
         res = self._write(article.id, data)
 
         # 错误处理
-        if int(res.status_code/100) != 2:
+        if int(res.status_code / 100) != 2:
             article.status = ArticleStore.ES_ERROR_STATUS
             article.save()
 

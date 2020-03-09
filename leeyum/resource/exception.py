@@ -51,6 +51,11 @@ class ActionRecordException(BusinessException):
     business_message = 'action record fail'
 
 
+class JoinTeamException(BusinessException):
+    business_code = 400
+    business_message = 'join(leave) team fail'
+
+
 def custom_exception_handler(exc, context):
     """
     DRF 统一异常处理函数

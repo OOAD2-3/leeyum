@@ -22,6 +22,8 @@ urlpatterns = [
 
     path('article/', ArticleViewSet.as_view({'post': 'create', 'put': 'update', 'get': 'list'})),
     path('article/details/', ArticleViewSet.as_view({'get': 'retrieve'})),
+    path('article/join_team/', ArticleViewSet.as_view({'put': 'join_team'})),
+    path('article/leave_team/', ArticleViewSet.as_view({'put': 'leave_team'})),
 
     path('tag/', TagViewSet.as_view({'post': 'create', 'put': 'update', 'delete': 'delete'})),
     path('tag/all/', TagViewSet.as_view({'get': 'get_all_tags'})),

@@ -195,6 +195,16 @@ class ArticleStore(BaseModel):
         self.pic_urls = json.loads(self.pic_urls) if type(self.pic_urls) is str else self.pic_urls
         self.content = json.loads(self.content) if type(self.content) is str else self.content
         self.tags = json.loads(self.tags) if type(self.tags) is str else self.tags
+        return self
+
+    def flat_article(self):
+        """
+        拍平字段 与concrete article作用相反
+        """
+        self.pic_urls = json.dumps(self.pic_urls) if type(self.pic_urls) is not str else self.pic_urls
+        self.content = json.dumps(self.content) if type(self.content) is not str else self.content
+        self.tags = json.dumps(self.tags) if type(self.tags) is not str else self.tags
+        return self
 
     def to_dict(self, fields=None, exclude=tuple()):
         result = BaseModel.to_dict(self, fields, exclude)
@@ -221,6 +231,12 @@ class ArticleStore(BaseModel):
             "publisher": copy_article.publisher_id,
             "category": copy_article.category_id
         }
+
+    def is_team_type(self):
+        if type(self.content) is str:
+            return 'total_number' in self.content
+        else:
+            return self.content.get('total_number') is not None
 
 
 class CommentStore(BaseModel):
