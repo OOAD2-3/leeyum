@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError, NotAuthenticated
 
 from leeyum.domain.models import ArticleStore
 from leeyum.domain.service.article import ARTICLE_SERVICE, ARTICLE_INDEX_SERVICE
+from leeyum.domain.service.user import USER_SERVICE
 from leeyum.views import BaseViewSet, BaseSerializer, JSONResponse
 
 
@@ -54,6 +55,9 @@ class ArticleViewSet(BaseViewSet):
 
         article_id = request.GET.get('id')
         article = ARTICLE_SERVICE.get_details(article_id)
+
+        # 添加浏览记录
+        USER_SERVICE.add_viewed_article(user=reader, article_id=article_id)
 
         dict_res = article.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created'))
         publisher = article.publisher.to_dict(fields=('username',))

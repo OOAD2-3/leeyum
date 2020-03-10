@@ -151,6 +151,8 @@ class ArticleStore(BaseModel):
     title = models.CharField('标题', max_length=1024, null=True, blank=False)
     pic_urls = models.CharField('图片url', max_length=2048, null=True, blank=False)
     content = models.CharField('详情内容', max_length=1024 * 10, null=True, blank=True)
+    # viewed_times = models.IntegerField('浏览次数', null=True, blank=True, default=0)
+    # liked_times = models.IntegerField('收藏次数', null=True, blank=True, default=0)
 
     tags = models.CharField('标签 拍平存储', max_length=1024, null=True, blank=True)
     category = models.ForeignKey(CategoryStore, on_delete=models.DO_NOTHING, default=-1)

@@ -27,26 +27,24 @@ class RedisClient(object):
             raise RedisContactException(e, message='redis访问出问题')
 
     def put_history(self, name, value):
-        """
-        默认历史浏览记录为30条
-        """
         try:
             con = StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
             history_key = 'history_%d' % name
             pl = con.pipeline()
             pl.lrem(history_key, 0, value)
             pl.lpush(history_key, value)
-            pl.ltrim(history_key, 0, 29)
             pl.execute()
-            print(value)
         except Exception as e:
             raise RedisContactException(e, message='redis访问出问题')
 
     def get_history(self, name):
+        """
+        默认只取30条历史浏览记录
+        """
         try:
             con = StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
             history_key = 'history_%d' % name
-            return con.lrange(history_key, 0, -1)
+            return con.lrange(history_key, 0, 29)
         except Exception as e:
             raise RedisContactException(e, message='redis访问出问题')
 
