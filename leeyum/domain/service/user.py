@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from leeyum.domain.models import ArticleStore, UserStore
 from leeyum.domain.utils import captcha_generator, validate_phone_number
 from django.shortcuts import get_object_or_404
@@ -55,7 +57,7 @@ class UserService(object):
         获取用户发布记录
         """
         published_article_list = []
-        published_articles = ArticleStore.objects.filter(publisher_id=publisher.id)
+        published_articles = ArticleStore.objects.filter(Q(publisher_id=publisher.id) & Q(status=0))
         for article in published_articles:
             published_article_list.append({'article_id': article.id, 'article_title': article.title})
         return published_article_list
@@ -86,30 +88,30 @@ class UserService(object):
             like_article_list.append({'article_id': article.id, 'article_title': article.title})
         return like_article_list
 
-    def get_liked_times(self, user, article_id=-1, *args, **kwargs):
+    def get_liked_times_by_article(self, article_id, *args, **kwargs):
         """
         获取article被收藏次数
         """
-        if article_id == -1:
-            liked_times = self.get_liked_times_by_user(user=user)
-        else:
-            article = get_object_or_404(ArticleStore, id=article_id)
-            liked_times = article.userstore_set.all().count()
+        article = get_object_or_404(ArticleStore, id=article_id)
+        liked_times = article.userstore_set.all().count()
         return liked_times
 
     def get_liked_times_by_user(self, user, *args, **kwargs):
         """
-        获取user下的article被收藏总次数
+        获取用户被收藏总次数
         """
         published_article_list = self.list_published_article(publisher=user)
         liked_times = 0
         for article in published_article_list:
-            liked_times = liked_times + self.get_liked_times(article_id=article['article_id'], user=user)
+            liked_times += self.get_liked_times_by_article(article_id=article['article_id'])
             continue
         return liked_times
 
     def add_viewed_article(self, user, article_id, *args, **kwargs):
         REDIS_CLIENT.put_history(name=user.id, value=article_id)
+        article = get_object_or_404(ArticleStore, id=article_id)
+        article.viewed_times += 1
+        article.save()
         return True
 
     def list_viewed_article(self, user, *args, **kwargs):
@@ -117,12 +119,9 @@ class UserService(object):
         viewed_article_list = []
         viewed_article_id = REDIS_CLIENT.get_history(name=user.id)
         for article_id in viewed_article_id:
-            article = get_object_or_404(ArticleStore, id=article_id)
+            article = ArticleStore.objects.filter(id=article_id)
             viewed_article_list.append({'article_id': article.id, 'article_title': article.title})
         return viewed_article_list
-
-    def get_viewed_times(self, *args, **kwargs):
-        pass
 
 
 USER_SERVICE = UserService()

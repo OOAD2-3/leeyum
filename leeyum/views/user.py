@@ -103,14 +103,10 @@ class UserViewSet(BaseViewSet):
 
     def get_liked_times(self, request):
         """
-        获取收藏次数
-        若未传article_id，获取用户发文被收藏总次数
+        获取用户被收藏总次数
         """
         user = request.user
-        article_id = request.GET.get('article_id', -1)
-        if not article_id:
-            article_id = -1
-        like_times = USER_SERVICE.get_liked_times(article_id=article_id, user=user)
+        like_times = USER_SERVICE.get_liked_times_by_user(user=user)
         return JSONResponse(data={'liked_times': like_times})
 
     def list_published_article(self, request):

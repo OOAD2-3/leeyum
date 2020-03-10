@@ -58,10 +58,15 @@ class ArticleViewSet(BaseViewSet):
 
         # 添加浏览记录
         USER_SERVICE.add_viewed_article(user=reader, article_id=article_id)
+        # 被收藏次数
+        liked_times = USER_SERVICE.get_liked_times_by_article(article_id=article_id)
 
-        dict_res = article.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created'))
+        dict_res = article.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created', 'viewed_times'))
         publisher = article.publisher.to_dict(fields=('username',))
         dict_res['publisher'] = publisher
+        # 这时候获取的浏览次数还未加1
+        dict_res['viewed_times'] = article.viewed_times + 1
+        dict_res['liked_times'] = liked_times
 
         if article.is_team_type() and reader:
             dict_res['team_has_joined'] = ARTICLE_SERVICE.is_inside_team(article, reader)
