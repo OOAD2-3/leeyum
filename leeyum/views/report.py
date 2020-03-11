@@ -13,11 +13,10 @@ class ReportViewSet(BaseViewSet):
     def create(self, request):
         if not bool(request.user and request.user.is_authenticated):
             raise NotAuthenticated("身份未认证")
-        user = request.user
         article_id = request.json_data.get('article_id')
         comment_id = request.json_data.get('comment_id')
         report_reason = request.json_data.get('report_reason')
-        report = REPORT_SERVICE.create(user=user, article_id=article_id,
+        report = REPORT_SERVICE.create(reporter=request.user, article_id=article_id,
                                        comment_id=comment_id, report_reason=report_reason)
         return JSONResponse(data={'report_id': report.id})
 

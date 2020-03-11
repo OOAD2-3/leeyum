@@ -13,7 +13,7 @@ class ReportService(object):
     """
     举报模块
     """
-    def create(self, report_reason, user, *args, **kwargs):
+    def create(self, report_reason, reporter, *args, **kwargs):
         """
         举报信息或评论
         """
@@ -21,8 +21,7 @@ class ReportService(object):
         comment_id = kwargs.get('comment_id')
         try:
             create_report = ReportStore(report_reason=report_reason, report_article_id=article_id,
-                                        report_comment_id=comment_id)
-            create_report.reporter_id = user.id if user.id is not None else 1
+                                        report_comment_id=comment_id, reporter_id=reporter.id)
             create_report.save()
             return create_report
         except Exception as e:

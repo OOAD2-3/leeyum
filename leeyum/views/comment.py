@@ -18,7 +18,7 @@ class CommentViewSet(BaseViewSet):
         comment_parent_id = request.json_data.get('comment_parent_id')
 
         comment = COMMENT_SERVICE \
-            .create(message=comment_message, comment_article_id=comment_article_id, comment_publiser=request.user,
+            .create(message=comment_message, comment_article_id=comment_article_id, comment_publisher=request.user,
                     comment_parent_id=comment_parent_id)
         return JSONResponse(data={'comment_id': comment.id})
 

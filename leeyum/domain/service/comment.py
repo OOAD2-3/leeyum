@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from leeyum.domain.models import CommentStore, UserStore
 from django.shortcuts import get_object_or_404
 
+from leeyum.infra.sensitiveFilter import SENSITIVE_FILTER
 
 __all__ = ('COMMENT_SERVICE',)
 
@@ -21,10 +22,12 @@ class CommentService(object):
         if not comment_article_id or type(comment_article_id) is not int:
             raise ValidationError(
                 '新建comment失败, 参数comment_article_id格式错误 comment_article_id = {}'.format(comment_article_id))
+        if SENSITIVE_FILTER.filter(message) is False:
+            raise ValidationError('新建comment失败，含有敏感词！')
         try:
             create_comment = CommentStore(comment_message=message, comment_article_id=comment_article_id,
-                                          comment_parent_id=comment_parent_id)
-            create_comment.comment_publisher_id = comment_publisher.id if comment_publisher.id is not None else 1
+                                          comment_parent_id=comment_parent_id,
+                                          comment_publisher_id=comment_publisher.id)
             create_comment.save()
             return create_comment
         except Exception as e:

@@ -54,10 +54,10 @@ class ArticleViewSet(BaseViewSet):
         reader = request.user if bool(request.user and request.user.is_authenticated) else None
 
         article_id = request.GET.get('id')
-        article = ARTICLE_SERVICE.get_details(article_id)
-
         # 添加浏览记录
         USER_SERVICE.add_viewed_article(user=reader, article_id=article_id)
+        article = ARTICLE_SERVICE.get_details(article_id)
+
         # 被收藏次数
         liked_times = USER_SERVICE.get_liked_times_by_article(article_id=article_id)
 
