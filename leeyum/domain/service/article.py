@@ -35,6 +35,10 @@ class ArticleService(object):
         if not category_id or type(category_id) is not int:
             raise ValidationError('新建article失败, 参数category_id格式错误 category_id = {}'.format(category_id))
 
+        # todo
+        # 敏感词
+        # if SENSITIVE_FILTER.filter(title) is False:
+
         try:
             create_article = ArticleStore(title=title, publisher_id=creator.id)
             create_article.pic_urls = json.dumps(pic_urls)
@@ -62,6 +66,9 @@ class ArticleService(object):
 
         for f in fields:
             if kwargs.get(f):
+                # todo
+                # 敏感词
+                # if SENSITIVE_FILTER.filter(title) is False:
                 update_fields.append(f)
                 value = kwargs.get(f)
                 if f == 'content':

@@ -112,7 +112,6 @@ class CategoryStore(BaseModel):
 
     name = models.CharField('类目名字', max_length=128, null=True, blank=False)
     intro = models.CharField('类目介绍', max_length=256, null=True, blank=True)
-    # parent = models.IntegerField('上级id', default=0)
     parent = models.ForeignKey('self', on_delete=models.DO_NOTHING, related_name='sub_category', null=True, blank=True,
                                default=-1)
 
@@ -127,6 +126,11 @@ class ArticleStore(BaseModel):
     NORMAL_STATUS = 0
     DELETE_STATUS = -1
     ES_ERROR_STATUS = 2
+
+    # 举报等级
+    NORMAL = 3
+    PROBLEM = 4
+    DANGER = 5
 
     content_fields = ['body',
                       'price', 'new_or_old', 'time_span',
@@ -157,6 +161,8 @@ class ArticleStore(BaseModel):
     category = models.ForeignKey(CategoryStore, on_delete=models.DO_NOTHING, default=-1)
     publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING, default=-1)
     publish_time = models.DateTimeField("发布时间", default=timezone.now)
+
+    report_level = models.IntegerField('举报等级', default=NORMAL)
 
     # 非es字段
     status = models.IntegerField('状态', default=NORMAL_STATUS)
@@ -238,6 +244,9 @@ class CommentStore(BaseModel):
     """
     评论系统
     """
+    NORMAL = 0
+    PROBLEM = -1
+    DANGER = 2
 
     class Meta:
         db_table = "leeyum_comment"
@@ -247,6 +256,8 @@ class CommentStore(BaseModel):
 
     comment_publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING)
     comment_article = models.ForeignKey(ArticleStore, on_delete=models.DO_NOTHING)
+
+    report_level = models.IntegerField('举报等级', default=NORMAL)
 
     def __str__(self):
         return self.comment_message

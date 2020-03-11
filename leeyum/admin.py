@@ -90,6 +90,11 @@ class CommentAdmin(admin.ModelAdmin):
     pass
 
 
+@admin.register(models.ReportStore)
+class ReportAdmin(admin.ModelAdmin):
+    pass
+
+
 @admin.register(models.TagStore)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'intro')

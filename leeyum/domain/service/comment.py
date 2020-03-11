@@ -23,7 +23,7 @@ class CommentService(object):
             raise ValidationError(
                 '新建comment失败, 参数comment_article_id格式错误 comment_article_id = {}'.format(comment_article_id))
         if SENSITIVE_FILTER.filter(message) is False:
-            raise ValidationError('新建comment失败，含有敏感词！')
+            raise ValidationError('新建失败，评论含有敏感词！')
         try:
             create_comment = CommentStore(comment_message=message, comment_article_id=comment_article_id,
                                           comment_parent_id=comment_parent_id,
