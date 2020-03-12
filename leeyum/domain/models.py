@@ -244,9 +244,9 @@ class CommentStore(BaseModel):
     """
     评论系统
     """
-    NORMAL = 0
-    PROBLEM = -1
-    DANGER = 2
+    NORMAL = 3
+    PROBLEM = 4
+    DANGER = 5
 
     class Meta:
         db_table = "leeyum_comment"

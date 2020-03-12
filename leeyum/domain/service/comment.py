@@ -46,6 +46,7 @@ class CommentService(object):
                 'comment_id': comment.id,
                 'publisher_name': publisher.username,
                 'comment_message': comment.comment_message,
+                'report_level': comment.report_level,
                 'sub_comment_list': sub_comment_list})
             for sub_com in comment.sub_comment.all():
                 sub_comment_list.extend(self.get_comment_by_parent_comment(comment_id=sub_com.id))
@@ -62,6 +63,7 @@ class CommentService(object):
             'comment_id': comment.id,
             'publisher_id': comment.comment_publisher_id,
             'comment_message': comment.comment_message,
+            'report_level': comment.report_level,
             'sub_comment_list': sub_comment_list})
         sub_comments = comment.sub_comment.all()
         for sub_com in sub_comments:
@@ -70,6 +72,7 @@ class CommentService(object):
                 'comment_id': sub_com.id,
                 'publisher_id': sub_com.comment_publisher_id,
                 'comment_message': sub_com.comment_message,
+                'report_level': comment.report_level,
                 'sub_comment_list': sec_sub_comment_list})
             for sub_sub_com in sub_com.sub_comment.all():
                 sec_sub_comment_list.extend(self.get_comment_by_parent_comment(comment_id=sub_sub_com.id))

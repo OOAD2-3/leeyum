@@ -87,22 +87,29 @@ class ArticleAdmin(admin.ModelAdmin):
 
 @admin.register(models.CommentStore)
 class CommentAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('comment_article', 'comment_message', 'comment_publisher', 'report_level')
+    search_fields = ('comment_article',)
+    list_filter = ('comment_article', 'report_level')
 
 
 @admin.register(models.ReportStore)
 class ReportAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('report_article', 'report_comment', 'report_reason', 'reporter',)
+    search_fields = ('report_article',)
+    list_filter = ('report_article',)
 
 
 @admin.register(models.TagStore)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'intro')
+    search_fields = ('name', 'intro')
+    list_filter = ('name',)
 
 
 @admin.register(models.CategoryStore)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'intro', 'parent')
+    search_fields = ('name',)
     list_filter = ('parent',)
     ordering = ('-parent',)
 
@@ -114,6 +121,9 @@ class UserAdmin(admin.ModelAdmin):
         ('基本信息', {
             'fields': ('username', 'phone_number', 'password', 'email', 'profile_avatar_url',),
         }),
+        # ('收藏信息', {
+        #     'fields': ('like_article',),
+        # }),
         ('高级信息', {
             'classes': ('collapse',),  # 把‘高级信息’默认折叠起来
             'fields': (('is_superuser', 'is_staff', 'is_active'),),
