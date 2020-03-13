@@ -56,11 +56,14 @@ class UserService(object):
         """
         获取用户发布记录
         """
-        published_article_list = []
-        published_articles = ArticleStore.objects.filter(Q(publisher_id=publisher.id) & Q(status=0))
-        for article in published_articles:
-            published_article_list.append({'article_id': article.id, 'article_title': article.title})
-        return published_article_list
+        # 【check】 service返回的尽可能是对象 而不是dict
+        return ArticleStore.objects.filter(Q(publisher_id=publisher.id) & Q(status=0))
+
+        # published_article_list = []
+        # published_articles = ArticleStore.objects.filter(Q(publisher_id=publisher.id) & Q(status=0))
+        # for article in published_articles:
+        #     published_article_list.append({'article_id': article.id, 'article_title': article.title})
+        # return published_article_list
 
     def add_like_article(self, user, article_id, *args, **kwargs):
         """
@@ -88,13 +91,16 @@ class UserService(object):
             like_article_list.append({'article_id': article.id, 'article_title': article.title})
         return like_article_list
 
-    def get_liked_times_by_article(self, article_id, *args, **kwargs):
+    def get_liked_times_by_article(self, article, *args, **kwargs):
         """
         获取article被收藏次数
         """
-        article = get_object_or_404(ArticleStore, id=article_id)
-        liked_times = article.userstore_set.all().count()
-        return liked_times
+        # 【check】尽可能减少查库次数
+        return article.userstore_set.all().count()
+
+        # article = get_object_or_404(ArticleStore, id=article_id)
+        # liked_times = article.userstore_set.all().count()
+        # return liked_times
 
     def get_liked_times_by_user(self, user, *args, **kwargs):
         """
@@ -103,13 +109,13 @@ class UserService(object):
         published_article_list = self.list_published_article(publisher=user)
         liked_times = 0
         for article in published_article_list:
-            liked_times += self.get_liked_times_by_article(article_id=article['article_id'])
-            continue
+            liked_times += self.get_liked_times_by_article(article=article)
+
         return liked_times
 
-    def add_viewed_article(self, user, article_id, *args, **kwargs):
-        REDIS_CLIENT.put_history(name=user.id, value=article_id)
-        article = get_object_or_404(ArticleStore, id=article_id)
+    def add_viewed_article(self, user, article, *args, **kwargs):
+        if user:
+            REDIS_CLIENT.put_history(name=user.id, value=article.id)
         article.viewed_times += 1
         article.save()
         return True

@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError, NotAuthenticated
 
 from leeyum.domain.models import ArticleStore
 from leeyum.domain.service.article import ARTICLE_SERVICE, ARTICLE_INDEX_SERVICE
+from leeyum.domain.service.async_job import record_search_word
 from leeyum.domain.service.user import USER_SERVICE
 from leeyum.views import BaseViewSet, BaseSerializer, JSONResponse
 
@@ -52,21 +53,20 @@ class ArticleViewSet(BaseViewSet):
 
     def retrieve(self, request):
         reader = request.user if bool(request.user and request.user.is_authenticated) else None
-
         article_id = request.GET.get('id')
-
-        # 添加浏览记录
-        if reader:
-            USER_SERVICE.add_viewed_article(user=reader, article_id=article_id)
-
         article = ARTICLE_SERVICE.get_details(article_id)
 
+        # 添加浏览记录
+        USER_SERVICE.add_viewed_article(user=reader, article=article)
         dict_res = article.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created', 'viewed_times'))
-        publisher = article.publisher.to_dict(fields=('username',))
+        # 发布者信息
+        publisher = article.publisher.to_dict(fields=('username', 'phone_number'))
         dict_res['publisher'] = publisher
-        dict_res['liked_times'] = USER_SERVICE.get_liked_times_by_article(article_id=article_id)
-        dict_res['viewed_times'] = article.viewed_times
-
+        # view_times可能为null
+        dict_res['viewed_times'] = article.viewed_times if article.viewed_times else 0
+        # 被收藏次数
+        dict_res['liked_times'] = USER_SERVICE.get_liked_times_by_article(article=article)
+        # 组队信息 - 是否加入组队
         if article.is_team_type() and reader:
             dict_res['team_has_joined'] = ARTICLE_SERVICE.is_inside_team(article, reader)
 
@@ -76,6 +76,8 @@ class ArticleViewSet(BaseViewSet):
         """
         搜索 + 全量
         """
+        reader = request.user if bool(request.user and request.user.is_authenticated) else None
+
         page = request.GET.get('page', 1)
         page_size = request.GET.get('page_size', 10)
         category = request.GET.get('category')
@@ -93,6 +95,8 @@ class ArticleViewSet(BaseViewSet):
         else:
             keyword = request.GET.get('keyword')
             article_list = ARTICLE_INDEX_SERVICE.search(keyword=keyword, category=category, tags=tags)
+            if reader:
+                record_search_word.delay(keyword=keyword, user_id=reader.id)
 
         paginator = Paginator(article_list, page_size)
         page_info = paginator.page(page)

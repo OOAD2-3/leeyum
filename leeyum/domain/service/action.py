@@ -1,5 +1,6 @@
 from datetime import datetime, date, timedelta
 
+from django.db import IntegrityError
 from django.db.models import F
 
 from leeyum.domain.models import ActionDefinition, ActionTimeRecorder
@@ -10,14 +11,21 @@ from leeyum.resource.exception import ActionRecordException
 
 
 class ActionService(object):
-    ALLOW_ACTION_TYPE = ['category', 'article', 'hot_word']
+    CATEGORY_TYPE = 'category'
+    ARTICLE_TYPE = 'article'
+    HOT_WORD_TYPE = 'hot_word'
+    ALLOW_ACTION_TYPE = [CATEGORY_TYPE, ARTICLE_TYPE, HOT_WORD_TYPE]
 
     def record(self, action_type, record_data, user_id):
         if not self._check_action_type(action_type):
             raise ActionRecordException(message='action type is wrong:{}'.format(action_type))
 
-        action_definition, is_create = ActionDefinition.objects. \
-            get_or_create(action_type=action_type, record_data=record_data, user_id=user_id)
+        try:
+            action_definition = ActionDefinition.objects.\
+                create(action_type=action_type, record_data=record_data, user_id=user_id)
+        except IntegrityError as e:
+            action_definition = ActionDefinition.objects.\
+                get(action_type=action_type, record_data=record_data, user_id=user_id)
 
         today = date.today()
 

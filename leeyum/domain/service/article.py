@@ -39,7 +39,7 @@ class ArticleService(object):
 
         if SENSITIVE_FILTER.filter(title) is False:
             raise ValidationError('新建失败，标题含有敏感词！')
-        elif SENSITIVE_FILTER.filter(content_details) is False:
+        elif SENSITIVE_FILTER.filter(json.dumps(content_details)) is False:
             raise ValidationError('新建失败，内容含有敏感词！')
 
         try:
@@ -216,6 +216,10 @@ class ArticleIndexService(object):
         if int(res.status_code / 100) != 2:
             article.status = ArticleStore.ES_ERROR_STATUS
             article.save()
+        else:
+            if article.status != ArticleStore.NORMAL_STATUS:
+                article.status = ArticleStore.NORMAL_STATUS
+                article.save()
 
         return res
 
@@ -285,8 +289,19 @@ class ArticleIndexService(object):
                     "nested": {
                         "path": "content",
                         "query": {
-                            "match_phrase": {
-                                "content.body": keyword
+                            "bool": {
+                                "should": [
+                                    {
+                                        "match_phrase": {
+                                            "content.body": keyword
+                                        }
+                                    },
+                                    {
+                                        "match_phrase": {
+                                            "content.place": keyword
+                                        }
+                                    }
+                                ]
                             }
                         }
                     }
@@ -300,7 +315,7 @@ class ArticleIndexService(object):
                     "match_phrase": {
                         "tags.keyword": keyword
                     }
-                }
+                },
             ]
             keywords_dsl_part['bool']['should'].extend(keywords_should_dsl_part)
         base_search_dsl['query']['bool']['must'].append(keywords_dsl_part)
@@ -325,9 +340,13 @@ class ArticleIndexService(object):
             base_search_dsl['query']['bool']['must'].append(category_dsl_part)
         return json.dumps(base_search_dsl)
 
-    def _backdoor_refresh_es_data(self):
-        for article in ArticleStore.objects.filter(status=ArticleStore.NORMAL_STATUS):
-            self.publish(article)
+    def _backdoor_refresh_es_data(self, is_all=False):
+        if is_all:
+            for article in ArticleStore.objects.exclude(status=ArticleStore.DELETE_STATUS):
+                self.publish(article)
+        else:
+            for article in ArticleStore.objects.filter(status=ArticleStore.ES_ERROR_STATUS):
+                self.publish(article)
 
 
 ARTICLE_SERVICE = ArticleService()

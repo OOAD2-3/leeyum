@@ -16,7 +16,6 @@ from sensitive_settings import *
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
@@ -27,7 +26,6 @@ SECRET_KEY = '6%$pf5*e#98yu3+s1p52g#iwm9+kv(mva1o+l0y7kid*y4-jcs'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
@@ -109,7 +107,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
@@ -174,7 +171,7 @@ REST_FRAMEWORK = {
         # 'rest_framework.permissions.IsAuthenticated'
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',   # 基本认证
+        'rest_framework.authentication.BasicAuthentication',  # 基本认证
         'leeyum.resource.authentication.CsrfExemptSessionAuthentication',  # session认证
     ],
     "EXCEPTION_HANDLER": 'leeyum.resource.exception.custom_exception_handler',
@@ -184,12 +181,12 @@ REST_FRAMEWORK = {
     ]
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
 #  django3.0开始LANGUAGE_CODE前面必须配相应的LANGUAGES配置如下：
 from django.utils.translation import gettext_lazy as _
+
 LANGUAGES = [
     ('zh-Hans', _('Chinese')),
 ]
@@ -204,9 +201,16 @@ USE_L10N = True
 
 USE_TZ = False
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR + '/static/'
+
+# Celery application definition
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BROKER_URL = "redis://:{}@{}:{}/0".format(redis_password, redis_host, redis_port)
+CELERY_RESULT_BACKEND = "redis://:{}@{}:{}/0".format(redis_password, redis_host, redis_port)
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'

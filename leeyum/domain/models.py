@@ -171,6 +171,9 @@ class ArticleStore(BaseModel):
         return self.title
 
     def format_content(self, content_details, **kwargs):
+        """
+        将dict => str，并增删必要参数
+        """
         format_dict = {}
         for field in set(self.content_fields):
             if content_details.get(field):
@@ -310,6 +313,7 @@ class ActionDefinition(BaseModel):
 
     class Meta:
         db_table = "leeyum_action_definition"
+        unique_together = ('action_type', 'record_data', 'user')
 
     USER_BEHAVIOUR = 1
     SYSTEM_RECODER = 2

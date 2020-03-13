@@ -114,7 +114,12 @@ class UserViewSet(BaseViewSet):
         获取发布记录
         """
         user = request.user
-        published_article_list = USER_SERVICE.list_published_article(publisher=user)
+
+        published_article_list = []
+        published_list = USER_SERVICE.list_published_article(publisher=user)
+        for article in published_list:
+            published_article_list.append({'article_id': article.id, 'article_title': article.title})
+
         return JSONResponse(data=published_article_list)
 
     def list_viewed_article(self, request):
