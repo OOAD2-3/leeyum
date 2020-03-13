@@ -57,7 +57,7 @@ class ArticleViewSet(BaseViewSet):
         article = ARTICLE_SERVICE.get_details(article_id)
 
         # 添加浏览记录
-        USER_SERVICE.add_viewed_article(user=reader, article=article)
+        USER_SERVICE.add_viewed_article(user=reader, article_id=article.id)
         dict_res = article.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created', 'viewed_times'))
         # 发布者信息
         publisher = article.publisher.to_dict(fields=('username', 'phone_number'))
