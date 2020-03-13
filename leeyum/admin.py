@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from leeyum.domain import models
-from leeyum.domain.models import FileUploadRecorder
+from leeyum.domain.models import FileUploadRecorder, ArticleStore
 from leeyum.domain.service.article import ARTICLE_INDEX_SERVICE
 
 admin.site.site_header = '流云校园'
@@ -23,7 +23,7 @@ class ArticleAdmin(admin.ModelAdmin):
     # list_filter 筛选器
     # search_fields 搜索器
 
-    list_display = ('id', 'title', 'pic_urls', 'content', 'tags', 'category', 'publisher', 'publish_time')
+    list_display = ('id', 'title', 'pic_urls', 'content', 'tags', 'category', 'publisher', 'publish_time', 'status')
 
     # filter_horizontal = ('tags',)
 
@@ -83,7 +83,9 @@ class ArticleAdmin(admin.ModelAdmin):
     def delete_model(self, request, obj):
         ARTICLE_INDEX_SERVICE.delete(obj.id)
         FileUploadRecorder.abandon_these_files(json.loads(obj.pic_urls))
-        super().delete_model(request, obj)
+        obj.status = ArticleStore.DELETE_STATUS
+        obj.save()
+        # super().delete_model(request, obj)
 
 
 @admin.register(models.CommentStore)

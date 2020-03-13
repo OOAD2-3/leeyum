@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, F
 
 from leeyum.domain.models import ArticleStore, UserStore
 from leeyum.domain.utils import captcha_generator, validate_phone_number
@@ -113,11 +113,10 @@ class UserService(object):
 
         return liked_times
 
-    def add_viewed_article(self, user, article, *args, **kwargs):
+    def add_viewed_article(self, user, article_id, *args, **kwargs):
         if user:
-            REDIS_CLIENT.put_history(name=user.id, value=article.id)
-        article.viewed_times += 1
-        article.save()
+            REDIS_CLIENT.put_history(name=user.id, value=article_id)
+        ArticleStore.objects.filter(id=article_id).update(viewed_times=F('viewed_times')+1)
         return True
 
     def list_viewed_article(self, user, *args, **kwargs):
