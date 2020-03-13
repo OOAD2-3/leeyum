@@ -98,7 +98,11 @@ class UserViewSet(BaseViewSet):
         获取收藏记录
         """
         user = request.user
-        like_article_list = USER_SERVICE.list_like_article(user=user)
+
+        like_article_list = []
+        like_articles = USER_SERVICE.list_like_article(user=user)
+        for article in like_articles:
+            like_article_list.append({'article_id': article.id, 'article_title': article.title})
         return JSONResponse(data=like_article_list)
 
     def get_liked_times(self, request):
@@ -127,5 +131,9 @@ class UserViewSet(BaseViewSet):
         获取浏览记录
         """
         user = request.user
-        viewed_article_list = USER_SERVICE.list_viewed_article(user=user)
+
+        viewed_article_list = []
+        viewed_articles = USER_SERVICE.list_viewed_article(user=user)
+        for article in viewed_articles:
+            viewed_article_list.append({'article_id': article.id, 'article_title': article.title})
         return JSONResponse(data=viewed_article_list)
