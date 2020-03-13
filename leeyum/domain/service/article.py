@@ -1,3 +1,5 @@
+from leeyum.infra.sensitiveFilter import SENSITIVE_FILTER
+
 __all__ = ('ARTICLE_SERVICE', 'ARTICLE_INDEX_SERVICE')
 
 import json
@@ -35,9 +37,10 @@ class ArticleService(object):
         if not category_id or type(category_id) is not int:
             raise ValidationError('新建article失败, 参数category_id格式错误 category_id = {}'.format(category_id))
 
-        # todo
-        # 敏感词
-        # if SENSITIVE_FILTER.filter(title) is False:
+        if SENSITIVE_FILTER.filter(title) is False:
+            raise ValidationError('新建失败，标题含有敏感词！')
+        elif SENSITIVE_FILTER.filter(content_details) is False:
+            raise ValidationError('新建失败，内容含有敏感词！')
 
         try:
             create_article = ArticleStore(title=title, publisher_id=creator.id)
@@ -66,12 +69,14 @@ class ArticleService(object):
 
         for f in fields:
             if kwargs.get(f):
-                # todo
-                # 敏感词
-                # if SENSITIVE_FILTER.filter(title) is False:
                 update_fields.append(f)
                 value = kwargs.get(f)
+                if f == 'title':
+                    if SENSITIVE_FILTER.filter(f) is False:
+                        raise ValidationError('新建失败，标题含有敏感词！')
                 if f == 'content':
+                    if SENSITIVE_FILTER.filter(f) is False:
+                        raise ValidationError('新建失败，内容含有敏感词！')
                     value = update_article.format_content(content_details=value)
                 if f == 'pic_urls':
                     self.diff_pic(update_article, pic_urls=value)

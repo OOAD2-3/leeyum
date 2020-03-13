@@ -2,13 +2,12 @@
 __all__ = ('SENSITIVE_FILTER',)
 
 
-# 现在只试用在发表评论功能里
 class SensitiveFilter(object):
 
     def __init__(self):
         self.sensitive_chains = {}
         self.delimit = '\x00'
-        with open('leeyum/infra/sensitive_words.txt') as f:
+        with open('leeyum/infra/sensitive_word.txt', encoding='utf-8') as f:
             for sensitive in f:
                 self.add(sensitive.strip())
 
@@ -60,9 +59,8 @@ class SensitiveFilter(object):
 
 
 SENSITIVE_FILTER = SensitiveFilter()
-# if __name__ == "__main__":
-#     sf = SensitiveFilter()
-#     content = "大来啊去你妈的打架我不"
-#     result = sf.filter(content)
-#     print(result)
-
+if __name__ == "__main__":
+    sf = SensitiveFilter()
+    content = "大来啊去你妈的打架我不"
+    result = sf.filter(content)
+    print(result)

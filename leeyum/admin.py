@@ -2,6 +2,7 @@ import json
 
 from django.contrib import admin
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
 
 from leeyum.domain import models
 from leeyum.domain.models import FileUploadRecorder
@@ -89,7 +90,7 @@ class ArticleAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('comment_article', 'comment_message', 'comment_publisher', 'report_level')
     search_fields = ('comment_article',)
-    list_filter = ('comment_article', 'report_level')
+    list_filter = ('report_level', )
 
 
 @admin.register(models.ReportStore)
