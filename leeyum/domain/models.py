@@ -242,6 +242,14 @@ class ArticleStore(BaseModel):
         else:
             return self.content.get('total_number') is not None
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        """
+        重写save函数，一定先拍平才能存储
+        """
+        self.flat_article()
+        return super().save(force_insert=False, force_update=False, using=None,
+                            update_fields=None)
+
 
 class CommentStore(BaseModel):
     """
@@ -254,7 +262,8 @@ class CommentStore(BaseModel):
     class Meta:
         db_table = "leeyum_comment"
 
-    comment_parent = models.ForeignKey('self', on_delete=models.DO_NOTHING, related_name='sub_comment', null=True, blank=True, default=-1)
+    comment_parent = models.ForeignKey('self', on_delete=models.DO_NOTHING, related_name='sub_comment', null=True,
+                                       blank=True, default=-1)
     comment_message = models.CharField('评论信息', max_length=1024, null=True, blank=True)
 
     comment_publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING)
