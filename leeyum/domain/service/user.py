@@ -122,8 +122,9 @@ class UserService(object):
         viewed_article_id = REDIS_CLIENT.get_history(name=user.id)
         for article_id in viewed_article_id:
             article = ArticleStore.objects.filter(id=article_id).first()
-            article.concrete_article()
-            viewed_articles.append(article)
+            if article:
+                article.concrete_article()
+                viewed_articles.append(article)
 
         return viewed_articles
 
