@@ -177,14 +177,15 @@ class ArticleStore(BaseModel):
         format_dict = {}
         for field in set(self.content_fields):
             if content_details.get(field):
-                format_dict[field] = content_details.get(field)
-
                 # 发布为组队信息，冗余队长信息，初始化队员信息
                 if field == 'total_number':
                     leader = self.publisher.to_dict(fields=('phone_number',))
                     leader.update({'is_leader': True})
                     format_dict['team_members'] = [leader]
                     format_dict['now_number'] = 1
+                    content_details[field] = int(content_details.get(field))
+
+                format_dict[field] = content_details.get(field)
 
         return json.dumps(format_dict)
 
