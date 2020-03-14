@@ -57,7 +57,11 @@ class UserService(object):
         获取用户发布记录
         """
         # 【check】 service返回的尽可能是对象 而不是dict
-        return ArticleStore.objects.filter(Q(publisher_id=publisher.id) & Q(status=0))
+        articles = ArticleStore.objects.filter(Q(publisher_id=publisher.id) & Q(status=0))
+        for article in articles:
+            article.concrete_article()
+
+        return articles
 
     def add_like_article(self, user, article_id, *args, **kwargs):
         """
@@ -81,7 +85,11 @@ class UserService(object):
         """
         获取用户收藏记录
         """
-        return user.like_article.all()
+        articles = user.like_article.all()
+        for article in articles:
+            article.concrete_article()
+
+        return articles
 
     def get_liked_times_by_article(self, article, *args, **kwargs):
         """
@@ -114,6 +122,7 @@ class UserService(object):
         viewed_article_id = REDIS_CLIENT.get_history(name=user.id)
         for article_id in viewed_article_id:
             article = ArticleStore.objects.filter(id=article_id).first()
+            article.concrete_article()
             viewed_articles.append(article)
 
         return viewed_articles

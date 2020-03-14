@@ -35,48 +35,9 @@ class CommentService(object):
 
     def get_comment_by_article(self, article_id, *args, **kwargs):
         """
-        article下的所有评论（树形结构）
+        获取评论
         """
-        comments = CommentStore.objects.filter(Q(comment_article_id=article_id) & Q(comment_parent__isnull=True))
-        comment_list = []
-        for comment in comments:
-            publisher = get_object_or_404(UserStore, id=comment.comment_publisher_id)
-            sub_comment_list = []
-            comment_list.append({
-                'comment_id': comment.id,
-                'publisher_name': publisher.username,
-                'comment_message': comment.comment_message,
-                'report_level': comment.report_level,
-                'sub_comment_list': sub_comment_list})
-            for sub_com in comment.sub_comment.all():
-                sub_comment_list.extend(self.get_comment_by_parent_comment(comment_id=sub_com.id))
-        return comment_list
-
-    def get_comment_by_parent_comment(self, comment_id, *args, **kwargs):
-        """
-        comment及其子comment（树形结构）
-        """
-        comment_list = []
-        sub_comment_list = []
-        comment = get_object_or_404(CommentStore, id=comment_id)
-        comment_list.append({
-            'comment_id': comment.id,
-            'publisher_id': comment.comment_publisher_id,
-            'comment_message': comment.comment_message,
-            'report_level': comment.report_level,
-            'sub_comment_list': sub_comment_list})
-        sub_comments = comment.sub_comment.all()
-        for sub_com in sub_comments:
-            sec_sub_comment_list = []
-            sub_comment_list.append({
-                'comment_id': sub_com.id,
-                'publisher_id': sub_com.comment_publisher_id,
-                'comment_message': sub_com.comment_message,
-                'report_level': comment.report_level,
-                'sub_comment_list': sec_sub_comment_list})
-            for sub_sub_com in sub_com.sub_comment.all():
-                sec_sub_comment_list.extend(self.get_comment_by_parent_comment(comment_id=sub_sub_com.id))
-        return comment_list
+        return CommentStore.objects.filter(comment_article_id=article_id)
 
     def delete(self, user, comment_id, *args, **kwargs):
         """

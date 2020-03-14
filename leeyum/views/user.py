@@ -82,7 +82,7 @@ class UserViewSet(BaseViewSet):
         user = request.user
         article_id = request.json_data.get('article_id')
         article = USER_SERVICE.add_like_article(user=user, article_id=article_id)
-        return JSONResponse(data=article.to_dict(fields=('id', 'title')))
+        return JSONResponse(data=article.to_dict(fields=('id', 'title', 'pic_urls')))
 
     def delete_like_article(self, request):
         """
@@ -100,9 +100,9 @@ class UserViewSet(BaseViewSet):
         user = request.user
 
         like_article_list = []
-        like_articles = USER_SERVICE.list_like_article(user=user)
-        for article in like_articles:
-            like_article_list.append({'article_id': article.id, 'article_title': article.title})
+        articles = USER_SERVICE.list_like_article(user=user)
+        for article in articles:
+            like_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls')))
         return JSONResponse(data=like_article_list)
 
     def get_liked_times(self, request):
@@ -120,9 +120,9 @@ class UserViewSet(BaseViewSet):
         user = request.user
 
         published_article_list = []
-        published_list = USER_SERVICE.list_published_article(publisher=user)
-        for article in published_list:
-            published_article_list.append({'article_id': article.id, 'article_title': article.title})
+        articles = USER_SERVICE.list_published_article(publisher=user)
+        for article in articles:
+            published_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls')))
 
         return JSONResponse(data=published_article_list)
 
@@ -135,5 +135,5 @@ class UserViewSet(BaseViewSet):
         viewed_article_list = []
         viewed_articles = USER_SERVICE.list_viewed_article(user=user)
         for article in viewed_articles:
-            viewed_article_list.append({'article_id': article.id, 'article_title': article.title})
+            viewed_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls')))
         return JSONResponse(data=viewed_article_list)
