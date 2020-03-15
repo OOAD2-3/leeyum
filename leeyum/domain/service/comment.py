@@ -18,15 +18,13 @@ class CommentService(object):
         """
         新建评论
         """
-        comment_parent_id = kwargs.get('comment_parent_id')
         if not comment_article_id or type(comment_article_id) is not int:
             raise ValidationError(
-                '新建comment失败, 参数comment_article_id格式错误 comment_article_id = {}'.format(comment_article_id))
+                '新建comment失败, 参数article_id格式错误 article_id = {}'.format(comment_article_id))
         if SENSITIVE_FILTER.filter(message) is False:
             raise ValidationError('新建失败，评论含有敏感词！')
         try:
             create_comment = CommentStore(comment_message=message, comment_article_id=comment_article_id,
-                                          comment_parent_id=comment_parent_id,
                                           comment_publisher_id=comment_publisher.id)
             create_comment.save()
             return create_comment

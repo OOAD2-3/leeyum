@@ -14,12 +14,10 @@ class CommentViewSet(BaseViewSet):
         if not bool(request.user and request.user.is_authenticated):
             raise NotAuthenticated("身份未认证")
         comment_message = request.json_data.get('comment_message')
-        comment_article_id = request.json_data.get('comment_article_id')
-        comment_parent_id = request.json_data.get('comment_parent_id')
+        comment_article_id = request.json_data.get('article_id')
 
         comment = COMMENT_SERVICE \
-            .create(message=comment_message, comment_article_id=comment_article_id, comment_publisher=request.user,
-                    comment_parent_id=comment_parent_id)
+            .create(message=comment_message, comment_article_id=int(comment_article_id), comment_publisher=request.user)
         return JSONResponse(data={'comment_id': comment.id})
 
     def list(self, request):

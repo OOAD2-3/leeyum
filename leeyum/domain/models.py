@@ -263,8 +263,6 @@ class CommentStore(BaseModel):
     class Meta:
         db_table = "leeyum_comment"
 
-    comment_parent = models.ForeignKey('self', on_delete=models.DO_NOTHING, related_name='sub_comment', null=True,
-                                       blank=True, default=-1)
     comment_message = models.CharField('评论信息', max_length=1024, null=True, blank=True)
 
     comment_publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING)
