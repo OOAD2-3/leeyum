@@ -12,7 +12,7 @@ class FrontConfigViewSet(BaseViewSet):
         news = [obj.to_dict() for obj in ExpressNewsStore.objects.all().reverse()]
         paginator = Paginator(news, page_size)
         page_info = paginator.page(page)
-        return JSONResponse({"article_list": page_info.object_list, "has_next_page": page_info.has_next(),
+        return JSONResponse({"express_news": page_info.object_list, "has_next_page": page_info.has_next(),
                              "page": paginator.num_pages, "page_size": paginator.per_page, "total": paginator.count})
 
     def page_config(self, request):
