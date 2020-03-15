@@ -2,7 +2,6 @@ import json
 
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
 
 from leeyum.domain import models
 from leeyum.domain.models import FileUploadRecorder, ArticleStore
@@ -170,3 +169,8 @@ class ActionDefinitionAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(models.ExpressNewsStore)
+class ExpressNewsAdmin(admin.ModelAdmin):
+    list_display = ('news_title', 'news_target_url', 'news_tag')

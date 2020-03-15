@@ -1,6 +1,7 @@
 from django.urls import path
 
 from leeyum.views.action import ActionViewSet
+from leeyum.views.front_config import FrontConfigViewSet
 from leeyum.views.report import ReportViewSet
 from leeyum.views.tag import TagViewSet
 from leeyum.views.user import UserCommonViewSet, UserViewSet
@@ -39,4 +40,9 @@ urlpatterns = [
 
 urlpatterns += [
     path('action/record/', ActionViewSet.as_view({'post': 'record'}))
+]
+
+urlpatterns += [
+    path('front_config/express_news/', FrontConfigViewSet.as_view({'get': 'express_news'})),
+    path('front_config/page_config/', FrontConfigViewSet.as_view({'get': 'page_config'}))
 ]

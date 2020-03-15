@@ -353,3 +353,18 @@ class ActionTimeRecorder(BaseModel):
     month_ttl = models.IntegerField('月倒计时', default=1)
 
     record_date = models.DateField('记录时间', auto_now_add=True)
+
+
+class ExpressNewsStore(BaseModel):
+    """
+    流云快报表
+    """
+    class Meta:
+        db_table = "leeyum_express_news"
+
+    news_title = models.CharField("标题", max_length=128, null=True, blank=True)
+    news_target_url = models.CharField("单个目标url", max_length=128, null=True, blank=True)
+    news_tag = models.CharField("单个标签", max_length=64, null=True, blank=True)
+
+    def __str__(self):
+        return self.news_title

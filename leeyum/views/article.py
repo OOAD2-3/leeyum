@@ -101,8 +101,8 @@ class ArticleViewSet(BaseViewSet):
         paginator = Paginator(article_list, page_size)
         page_info = paginator.page(page)
 
-        return JSONResponse({"article_list": page_info.object_list, "has_next_page": page_info.has_next(), "page": paginator.num_pages,
-                             "page_size": paginator.per_page, "total": paginator.count})
+        return JSONResponse({"article_list": page_info.object_list, "has_next_page": page_info.has_next(),
+                             "page": paginator.num_pages, "page_size": paginator.per_page, "total": paginator.count})
 
     def upload_file(self, request):
         request_file = request.FILES.get('file')
