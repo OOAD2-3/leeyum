@@ -41,6 +41,8 @@ class CommentService(object):
         """
         是否发表了该评论
         """
+        if not user:
+            return False
         return user.id == comment.comment_publisher.id
 
     def delete(self, user, comment_id, *args, **kwargs):

@@ -95,6 +95,8 @@ class UserService(object):
         """
         文章是否被当前用户收藏
         """
+        if not user:
+            return False
         return article.id in (article.id for article in user.like_article.all())
 
     def get_liked_times_by_article(self, article, *args, **kwargs):

@@ -21,7 +21,7 @@ class CommentViewSet(BaseViewSet):
         return JSONResponse(data={'comment_id': comment.id})
 
     def list(self, request):
-        user = request.user
+        user = request.user if bool(request.user and request.user.is_authenticated) else None
         article_id = request.GET.get('article_id')
         comment_list = []
         comments = COMMENT_SERVICE.get_comment_by_article(article_id=article_id)
