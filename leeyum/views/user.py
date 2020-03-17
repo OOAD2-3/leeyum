@@ -102,7 +102,7 @@ class UserViewSet(BaseViewSet):
         like_article_list = []
         articles = USER_SERVICE.list_like_article(user=user)
         for article in articles:
-            like_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls')))
+            like_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls', 'category')))
         return JSONResponse(data=like_article_list)
 
     def get_liked_times(self, request):
@@ -122,8 +122,8 @@ class UserViewSet(BaseViewSet):
         published_article_list = []
         articles = USER_SERVICE.list_published_article(publisher=user)
         for article in articles:
-            published_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls')))
-
+            published_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls', 'category')))
+        published_article_list.reverse()
         return JSONResponse(data=published_article_list)
 
     def list_viewed_article(self, request):
@@ -135,5 +135,5 @@ class UserViewSet(BaseViewSet):
         viewed_article_list = []
         viewed_articles = USER_SERVICE.list_viewed_article(user=user)
         for article in viewed_articles:
-            viewed_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls')))
+            viewed_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls', 'category')))
         return JSONResponse(data=viewed_article_list)

@@ -37,6 +37,12 @@ class CommentService(object):
         """
         return CommentStore.objects.filter(comment_article_id=article_id)
 
+    def has_commented(self, user, comment, *args, **kwargs):
+        """
+        是否发表了该评论
+        """
+        return user.id == comment.comment_publisher.id
+
     def delete(self, user, comment_id, *args, **kwargs):
         """
         删除评论

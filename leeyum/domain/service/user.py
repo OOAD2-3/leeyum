@@ -85,11 +85,17 @@ class UserService(object):
         """
         获取用户收藏记录
         """
-        articles = user.like_article.all()
+        articles = user.like_article.all().order_by('-id')
         for article in articles:
             article.concrete_article()
 
         return articles
+
+    def is_liked(self, user, article, *args, **kwargs):
+        """
+        文章是否被当前用户收藏
+        """
+        return article.id in (article.id for article in user.like_article.all())
 
     def get_liked_times_by_article(self, article, *args, **kwargs):
         """

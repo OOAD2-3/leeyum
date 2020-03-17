@@ -21,12 +21,15 @@ class CommentViewSet(BaseViewSet):
         return JSONResponse(data={'comment_id': comment.id})
 
     def list(self, request):
+        user = request.user
         article_id = request.GET.get('article_id')
         comment_list = []
         comments = COMMENT_SERVICE.get_comment_by_article(article_id=article_id)
         for comment in comments:
-            comment_list.append({'comment_id': comment.id, 'publisher_name': comment.comment_publisher.username,
-                                 'comment_message': comment.comment_message, 'report_level': comment.report_level})
+            dict_res = ({'comment_id': comment.id, 'publisher_name': comment.comment_publisher.username,
+                        'comment_message': comment.comment_message, 'report_level': comment.report_level})
+            dict_res['has_commented'] = COMMENT_SERVICE.has_commented(user=user, comment=comment)
+            comment_list.append(dict_res)
         return JSONResponse(data=comment_list)
 
     def delete(self, request):

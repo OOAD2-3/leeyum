@@ -39,7 +39,7 @@ class ArticleService(object):
 
         if SENSITIVE_FILTER.filter(title) is False:
             raise ValidationError('新建失败，标题含有敏感词！')
-        elif SENSITIVE_FILTER.filter(json.dumps(content_details)) is False:
+        if SENSITIVE_FILTER.filter(json.dumps(content_details)) is False:
             raise ValidationError('新建失败，内容含有敏感词！')
 
         try:

@@ -66,6 +66,8 @@ class ArticleViewSet(BaseViewSet):
         dict_res['viewed_times'] = article.viewed_times if article.viewed_times else 0
         # 被收藏次数
         dict_res['liked_times'] = USER_SERVICE.get_liked_times_by_article(article=article)
+        # 是否被收藏
+        dict_res['is_liked'] = USER_SERVICE.is_liked(reader, article)
         # 组队信息 - 是否加入组队
         if article.is_team_type() and reader:
             dict_res['team_has_joined'] = ARTICLE_SERVICE.is_inside_team(article, reader)
