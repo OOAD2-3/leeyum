@@ -27,7 +27,7 @@ urlpatterns = [
 
     path('file/upload/', ArticleViewSet.as_view({'post': 'upload_file'})),
 
-    path('article/', ArticleViewSet.as_view({'post': 'create', 'put': 'update', 'get': 'list'})),
+    path('article/', ArticleViewSet.as_view({'post': 'create', 'put': 'update', 'get': 'list', 'delete': 'take_off'})),
     path('article/details/', ArticleViewSet.as_view({'get': 'retrieve'})),
     path('article/join_team/', ArticleViewSet.as_view({'put': 'join_team'})),
     path('article/leave_team/', ArticleViewSet.as_view({'put': 'leave_team'})),

@@ -106,6 +106,16 @@ class ArticleViewSet(BaseViewSet):
         return JSONResponse({"article_list": page_info.object_list, "has_next_page": page_info.has_next(),
                              "page": paginator.num_pages, "page_size": paginator.per_page, "total": paginator.count})
 
+    def take_off(self, request):
+        """
+        下架
+        """
+        if not bool(request.user and request.user.is_authenticated):
+            raise NotAuthenticated("身份未认证")
+        article_id = request.GET.get('id')
+        ARTICLE_SERVICE.delete(article_id=article_id)
+        return JSONResponse(message="下架成功")
+
     def upload_file(self, request):
         request_file = request.FILES.get('file')
         if not request_file:

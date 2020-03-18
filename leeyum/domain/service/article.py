@@ -46,11 +46,14 @@ class ArticleService(object):
             create_article = ArticleStore(title=title, publisher_id=creator.id)
             create_article.pic_urls = json.dumps(pic_urls)
             create_article.content = create_article.format_content(content_details)
-            create_article.team_members.add(creator)
             create_article.tags = json.dumps(tags) if tags else "[]"
             create_article.category_id = category_id
             create_article.status = ArticleStore.NORMAL_STATUS
             create_article.save()
+
+            # 如果是组队，记录组队关系
+            if create_article.is_team_type():
+                create_article.team_members.add(creator)
 
             # 将文件置为已使用
             FileUploadRecorder.use_these_files(pic_urls)
@@ -92,6 +95,22 @@ class ArticleService(object):
 
         update_article.save()
         return update_article, update_fields
+
+    def delete(self, article_id):
+        """
+        逻辑删除
+        """
+        article = get_object_or_404(ArticleStore, id=article_id)
+        try:
+            ARTICLE_INDEX_SERVICE.delete(article_id)
+        except Exception as e:
+            article.status = ArticleStore.ES_ERROR_STATUS
+            article.save()
+            raise e
+
+        FileUploadRecorder.abandon_these_files(json.loads(article.pic_urls))
+        article.status = ArticleStore.DELETE_STATUS
+        article.save()
 
     def upload_pic(self, pic_file, uploader):
         # 限制大小 限制类型
