@@ -148,7 +148,8 @@ class UserViewSet(BaseViewSet):
         teams = request.user.teams.all()
         res = []
         for item in teams:
-            res.append(item.to_dict(fields=('id', 'category', 'pic_urls', 'title')))
+            item.concrete_article()
+            res.append(item.to_dict(fields=('id', 'category', 'pic_urls', 'title', 'content', 'tag')))
 
         return JSONResponse(data=res)
 
