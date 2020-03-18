@@ -105,8 +105,9 @@ class UserViewSet(BaseViewSet):
         like_article_list = []
         articles = USER_SERVICE.list_like_article(user=user)
         for article in articles:
-            article.concrete_article()
-            like_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
+            if not article.is_take_off():
+                article.concrete_article()
+                like_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
         return JSONResponse(data=like_article_list)
 
     def get_liked_times(self, request):
@@ -126,8 +127,9 @@ class UserViewSet(BaseViewSet):
         published_article_list = []
         articles = USER_SERVICE.list_published_article(publisher=user)
         for article in articles:
-            article.concrete_article()
-            published_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
+            if not article.is_take_off():
+                article.concrete_article()
+                published_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
         published_article_list.reverse()
         return JSONResponse(data=published_article_list)
 
@@ -140,8 +142,9 @@ class UserViewSet(BaseViewSet):
         viewed_article_list = []
         viewed_articles = USER_SERVICE.list_viewed_article(user=user)
         for article in viewed_articles:
-            article.concrete_article()
-            viewed_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
+            if not article.is_take_off():
+                article.concrete_article()
+                viewed_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
         return JSONResponse(data=viewed_article_list)
 
     def list_teams(self, request):
@@ -151,8 +154,9 @@ class UserViewSet(BaseViewSet):
         teams = request.user.teams.all()
         res = []
         for item in teams:
-            item.concrete_article()
-            res.append(item.to_dict(exclude=('publisher', 'report_level')))
+            if not item.is_take_off():
+                item.concrete_article()
+                res.append(item.to_dict(exclude=('publisher', 'report_level')))
 
         return JSONResponse(data=res)
 

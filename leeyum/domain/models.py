@@ -256,6 +256,12 @@ class ArticleStore(BaseModel):
         else:
             return self.content.get('total_number') is not None
 
+    def is_take_off(self):
+        """
+        判断当前发文有没有下架
+        """
+        return self.status == self.DELETE_STATUS
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """
         重写save函数，一定先拍平才能存储
