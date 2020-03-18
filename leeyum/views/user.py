@@ -177,11 +177,11 @@ class UserViewSet(BaseViewSet):
         用户设置
         开关设置
         """
-        accept_recommended_message = request.post_data.get('accept_recommended_message')
-        accept_publish_article_recommend_to_others = request.post_data.get('accept_publish_article_recommend_to_others')
+        accept_recommended_message = request.json_data.get('accept_recommended_message')
+        accept_publish_article_recommend_to_others = request.json_data.get('accept_publish_article_recommend_to_others')
         if accept_recommended_message is not None:
-            request.user.accept_recommended_message = accept_recommended_message
+            request.user.accept_recommended_message = bool(accept_recommended_message)
         if accept_publish_article_recommend_to_others is not None:
-            request.user.accept_publish_article_recommend_to_others = accept_publish_article_recommend_to_others
+            request.user.accept_publish_article_recommend_to_others = bool(accept_publish_article_recommend_to_others)
         request.user.save()
-        return request.user.to_normal_dict()
+        return JSONResponse(data=request.user.to_normal_dict())
