@@ -62,6 +62,12 @@ class UserStore(AbstractUser, BaseModel):
     profile_avatar_url = models.CharField('头像', max_length=256, null=True, blank=True)
     like_article = models.ManyToManyField('ArticleStore')
 
+    teams = models.ManyToManyField('ArticleStore', related_name='team_members')
+
+    accept_recommended_message = models.BooleanField('允许接收短信推荐', default=True)
+    accept_publish_article_recommend_to_others = models.BooleanField('允许发布信息推荐给他人', default=True)
+    student_number = models.CharField('学号', max_length=16, null=True, blank=True)
+
     def __str__(self):
         return '{} {}'.format(self.username, self.phone_number)
 
@@ -71,7 +77,14 @@ class UserStore(AbstractUser, BaseModel):
         验证传入短信验证码是否正确
         """
         redis_value = REDIS_CLIENT.get_object(phone_number)
-        return redis_value == captcha
+        return redis_value.lower() == captcha.lower()
+
+    def is_student(self):
+        return bool(self.student_number)
+
+    def to_normal_dict(self):
+        return self.to_dict(fields=('username', 'phone_number', 'profile_avatar_url', 'accept_recommended_message',
+                                    'accept_publish_article_recommend_to_others', 'student_number'))
 
 
 # class UserViewRel(BaseModel):

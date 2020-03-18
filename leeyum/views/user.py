@@ -1,4 +1,6 @@
 # 参考文档：https://www.django-rest-framework.org/tutorial/1-serialization/
+from django.core.mail import send_mail, EmailMessage
+from django.template import loader
 from rest_framework.exceptions import ParseError
 
 from django.contrib.auth import login, authenticate, logout
@@ -10,6 +12,7 @@ from leeyum.domain.service.user import USER_SERVICE
 from leeyum.resource.exception import LoginException
 from leeyum.views import BaseViewSet, BaseSerializer
 from leeyum.views import JSONResponse
+from mysite.settings import EMAIL_HOST_USER
 
 
 class UserSerializer(BaseSerializer):
@@ -137,3 +140,47 @@ class UserViewSet(BaseViewSet):
         for article in viewed_articles:
             viewed_article_list.append(article.to_dict(fields=('id', 'title', 'pic_urls', 'category')))
         return JSONResponse(data=viewed_article_list)
+
+    def list_teams(self, request):
+        """
+        获取组队记录
+        """
+        teams = request.user.teams.all()
+        res = []
+        for item in teams:
+            res.append(item.to_dict(fields=('id', 'category', 'pic_urls', 'title')))
+
+        return JSONResponse(data=res)
+
+    def student_authentication(self, request):
+        """
+        学生认证
+        """
+        html_message = """
+        <div bgcolor="#17212e">
+            <span style="font-size: 24px; color: #66c0f4; font-family: Arial, Helvetica, sans-serif; font-weight: bold;"> 
+                {code} 
+            </span>
+        <div>
+        """
+
+        res = send_mail(subject='流云学生认证',
+                        message='尊敬的流云用户13063031520：\n您的验证码为 ',
+                        from_email=EMAIL_HOST_USER,
+                        recipient_list=['24320162202918@stu.xmu.edu.cn'],
+                        html_message='<div><span style="font-size: 24px; color: #66c0f4; font-family: Arial, Helvetica, sans-serif; font-weight: bold;"> {code} </span><div>')
+        return JSONResponse(data="发送成功") if res == 1 else JSONResponse(data="发送失败")
+
+    def accept_settings(self, request):
+        """
+        用户设置
+        开关设置
+        """
+        accept_recommended_message = request.post_data.get('accept_recommended_message')
+        accept_publish_article_recommend_to_others = request.post_data.get('accept_publish_article_recommend_to_others')
+        if accept_recommended_message is not None:
+            request.user.accept_recommended_message = accept_recommended_message
+        if accept_publish_article_recommend_to_others is not None:
+            request.user.accept_publish_article_recommend_to_others = accept_publish_article_recommend_to_others
+        request.user.save()
+        return request.user.to_normal_dict()

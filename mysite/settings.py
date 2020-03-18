@@ -214,3 +214,11 @@ CELERY_RESULT_BACKEND = "redis://:{}@{}:{}/0".format(redis_password, redis_host,
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
+
+
+# 设置邮件域名
+EMAIL_HOST = 'smtp.qq.com'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = '1520166121@qq.com'
+EMAIL_HOST_PASSWORD = mail_code_qq
+EMAIL_USER_TLS = False

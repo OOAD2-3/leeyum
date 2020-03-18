@@ -10,7 +10,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
-from leeyum.domain.models import ArticleStore, FileUploadRecorder
+from leeyum.domain.models import ArticleStore, FileUploadRecorder, UserStore
 from leeyum.domain.service.category import CATEGORY_SERVICE
 from leeyum.domain.utils import utc_to_datetime
 from leeyum.infra.aliCloud import ALI_STORAGE
@@ -46,6 +46,7 @@ class ArticleService(object):
             create_article = ArticleStore(title=title, publisher_id=creator.id)
             create_article.pic_urls = json.dumps(pic_urls)
             create_article.content = create_article.format_content(content_details)
+            create_article.team_members.add(creator)
             create_article.tags = json.dumps(tags) if tags else "[]"
             create_article.category_id = category_id
             create_article.status = ArticleStore.NORMAL_STATUS
@@ -61,6 +62,9 @@ class ArticleService(object):
             raise e
 
     def update(self, article_id, *args, **kwargs):
+        """
+        TODO 有问题 不用这个功能
+        """
         update_article = get_object_or_404(ArticleStore, id=article_id)
         update_article.concrete_article()
 
@@ -156,8 +160,11 @@ class ArticleService(object):
         user = user.to_dict(fields=('phone_number',))
         user.update({'is_leader': False})
         team_article.content.get('team_members', []).append(user)
-
         team_article.flat_article()
+
+        # 表记录
+        team_article.team_members.add(user)
+
         team_article.save()
 
         return team_article
@@ -175,8 +182,11 @@ class ArticleService(object):
         team_article.content['now_number'] -= 1
         team_article.content['team_members'] = [member for member in team_article.content.get('team_members', []) if
                                                 member.get('phone_number') != user.phone_number]
-
         team_article.flat_article()
+
+        # 表记录
+        team_article.team_members.remove(user)
+
         team_article.save()
 
         return team_article
@@ -186,6 +196,14 @@ class ArticleService(object):
             article.concrete_article()
 
         return user.phone_number in [member.get('phone_number') for member in article.content.get('team_members')]
+
+    def _back_door_team(self):
+        for article in ArticleStore.objects.all():
+            article.concrete_article()
+            for members in article.content.get('team_members', []):
+                user = UserStore.objects.get(phone_number=members.get('phone_number'))
+                if not article.team_members.filter(id=user.id):
+                    article.team_members.add(user)
 
 
 class ArticleIndexService(object):
