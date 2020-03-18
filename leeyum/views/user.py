@@ -192,3 +192,11 @@ class UserViewSet(BaseViewSet):
             request.user.accept_publish_article_recommend_to_others = bool(accept_publish_article_recommend_to_others)
         request.user.save()
         return JSONResponse(data=request.user.to_normal_dict())
+
+    def clear_viewed_article(self, request):
+        """
+        清除浏览记录
+        """
+        user = request.user
+        USER_SERVICE.clear_viewed_article(user=user)
+        return JSONResponse(message='clear viewed article success')

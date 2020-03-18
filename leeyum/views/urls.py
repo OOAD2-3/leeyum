@@ -22,8 +22,9 @@ urlpatterns = [
     path('user/published/', UserViewSet.as_view({'get': 'list_published_article'})),
     path('user/like/', UserViewSet.as_view({'post': 'add_like_article', 'get': 'list_like_article', 'delete': 'delete_like_article'})),
     path('user/liked/', UserViewSet.as_view({'get': 'get_liked_times'})),
-    path('user/viewed/', UserViewSet.as_view({'get': 'list_viewed_article'})),
+    path('user/viewed/', UserViewSet.as_view({'get': 'list_viewed_article', 'delete': 'clear_viewed_article'})),
     path('user/teams/', UserViewSet.as_view({'get': 'list_teams'})),
+
 
     path('file/upload/', ArticleViewSet.as_view({'post': 'upload_file'})),
 

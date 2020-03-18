@@ -48,5 +48,16 @@ class RedisClient(object):
         except Exception as e:
             raise RedisContactException(e, message='redis访问出问题')
 
+    def clear_history(self, name):
+        """
+        清除浏览记录
+        """
+        try:
+            con = StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
+            history_key = 'history_%d' % name
+            con.ltrim(history_key, 1, 0)
+        except Exception as e:
+            raise RedisContactException(e, message='redis访问出问题')
+
 
 REDIS_CLIENT = RedisClient()

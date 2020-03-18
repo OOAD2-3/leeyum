@@ -136,5 +136,11 @@ class UserService(object):
 
         return viewed_articles
 
+    def clear_viewed_article(self, user, *args, **kwargs):
+        # 清除浏览记录
+        if user:
+            REDIS_CLIENT.clear_history(name=user.id)
+
+        return True
 
 USER_SERVICE = UserService()
