@@ -192,10 +192,7 @@ class ArticleService(object):
         return team_article
 
     def is_inside_team(self, article, user):
-        if type(article.content) is str:
-            article.concrete_article()
-
-        return user.phone_number in [member.get('phone_number') for member in article.content.get('team_members')]
+        return bool(article.team_members.filter(id=user.id).first())
 
     def _back_door_team(self):
         for article in ArticleStore.objects.all():
