@@ -157,9 +157,9 @@ class ArticleService(object):
             raise JoinTeamException(message='user({}) has been join article({})'.format(user.phone_number, article_id))
 
         team_article.content['now_number'] += 1
-        user = user.to_dict(fields=('phone_number',))
-        user.update({'is_leader': False})
-        team_article.content.get('team_members', []).append(user)
+        team_member = user.to_dict(fields=('phone_number',))
+        team_member.update({'is_leader': False})
+        team_article.content.get('team_members', []).append(team_member)
         team_article.flat_article()
 
         # 表记录
