@@ -106,7 +106,7 @@ class UserViewSet(BaseViewSet):
         articles = USER_SERVICE.list_like_article(user=user)
         for article in articles:
             article.concrete_article()
-            article.append(article.to_dict(exclude=('publisher', 'report_level')))
+            like_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
         return JSONResponse(data=like_article_list)
 
     def get_liked_times(self, request):
@@ -127,7 +127,7 @@ class UserViewSet(BaseViewSet):
         articles = USER_SERVICE.list_published_article(publisher=user)
         for article in articles:
             article.concrete_article()
-            article.append(article.to_dict(exclude=('publisher', 'report_level')))
+            published_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
         published_article_list.reverse()
         return JSONResponse(data=published_article_list)
 
@@ -141,7 +141,7 @@ class UserViewSet(BaseViewSet):
         viewed_articles = USER_SERVICE.list_viewed_article(user=user)
         for article in viewed_articles:
             article.concrete_article()
-            article.append(article.to_dict(exclude=('publisher', 'report_level')))
+            viewed_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
         return JSONResponse(data=viewed_article_list)
 
     def list_teams(self, request):
