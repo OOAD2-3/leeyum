@@ -1,6 +1,7 @@
 from django.db.models import Q, F
 
 from leeyum.domain.models import ArticleStore, UserStore
+from leeyum.domain.service.async_job import record_article_click_times
 from leeyum.domain.utils import captcha_generator, validate_phone_number
 from django.shortcuts import get_object_or_404
 
@@ -119,6 +120,9 @@ class UserService(object):
 
     def add_viewed_article(self, user, article_id, *args, **kwargs):
         if user:
+            # 埋点记录
+            record_article_click_times.delay(article_id=article_id, user_id=user.id)
+            # redis记录
             REDIS_CLIENT.put_history(name=user.id, value=article_id)
         ArticleStore.objects.filter(id=article_id).update(viewed_times=F('viewed_times')+1)
 

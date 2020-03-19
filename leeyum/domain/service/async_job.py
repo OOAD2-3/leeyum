@@ -10,3 +10,8 @@ def record_search_word(keyword, user_id):
     for cut_word in cut_word_list:
         ACTION_SERVICE.record(ACTION_SERVICE.HOT_WORD_TYPE, cut_word, user_id=user_id)
     return '/'.join(cut_word_list)
+
+
+@celery_app.task
+def record_article_click_times(article_id, user_id):
+    ACTION_SERVICE.record(ACTION_SERVICE.ARTICLE_TYPE, record_data=article_id, user_id=user_id)
