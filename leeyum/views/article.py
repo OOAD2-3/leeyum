@@ -4,9 +4,11 @@ from django.core.paginator import Paginator
 from rest_framework.exceptions import ValidationError, NotAuthenticated
 
 from leeyum.domain.models import ArticleStore
+from leeyum.domain.service.action import ACTION_SERVICE
 from leeyum.domain.service.article import ARTICLE_SERVICE, ARTICLE_INDEX_SERVICE
 from leeyum.domain.service.async_job import record_search_word
 from leeyum.domain.service.user import USER_SERVICE
+from leeyum.infra.redis import REDIS_CLIENT
 from leeyum.views import BaseViewSet, BaseSerializer, JSONResponse
 
 
@@ -139,3 +141,18 @@ class ArticleViewSet(BaseViewSet):
         article_id = request.json_data.get('article_id')
         res = ARTICLE_SERVICE.leave_team(article_id=article_id, user=request.user)
         return JSONResponse(res.concrete_article().to_dict(exclude=('publisher',)))
+
+
+class ArticleRelationViewSet(BaseViewSet):
+    """
+    article相关的周边接口
+    """
+    def get_hot_word(self, request):
+        number = request.GET.get('number', 10)
+        hot_words = REDIS_CLIENT.get_object('ACTION_SERVICE.retrieve_hot_word(number={})'.format(number))
+        if not hot_words:
+            hot_words = ACTION_SERVICE.retrieve_hot_word(number=number)
+            REDIS_CLIENT.put_object('ACTION_SERVICE.retrieve_hot_word(number={})'.format(number), hot_words)
+
+        return JSONResponse(hot_words)
+

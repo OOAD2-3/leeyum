@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import date
 
 from django.db import IntegrityError
 from django.db.models import F
@@ -21,10 +21,10 @@ class ActionService(object):
             raise ActionRecordException(message='action type is wrong:{}'.format(action_type))
 
         try:
-            action_definition = ActionDefinition.objects.\
+            action_definition = ActionDefinition.objects. \
                 create(action_type=action_type, record_data=record_data, user_id=user_id)
         except IntegrityError as e:
-            action_definition = ActionDefinition.objects.\
+            action_definition = ActionDefinition.objects. \
                 get(action_type=action_type, record_data=record_data, user_id=user_id)
 
         today = date.today()
@@ -62,6 +62,27 @@ class ActionService(object):
 
     def _check_action_type(self, action_type):
         return action_type in self.ALLOW_ACTION_TYPE
+
+    def retrieve_hot_word(self, number):
+        sql = """
+        select leeyum_action_definition.id, leeyum_action_definition.record_data, SUM(temp_recorder.month_count) as sum_month_count
+        from (select * from leeyum_action_time_recorder where id in (select max(id) from leeyum_action_time_recorder group by action_definition_id)) as temp_recorder
+        left join leeyum_action_definition
+        on temp_recorder.action_definition_id=leeyum_action_definition.id
+        where leeyum_action_definition.action_type="hot_word"
+        group by leeyum_action_definition.record_data
+        order by sum_month_count DESC;
+        """
+
+        hot_words = ActionDefinition.objects.raw(sql)
+        res = []
+        index = 0
+        for item in hot_words:
+            if index < number:
+                res.append(item.record_data)
+                index += 1
+
+        return res
 
 
 ACTION_SERVICE = ActionService()

@@ -7,3 +7,4 @@ app = Celery('mysite')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # celery -A mysite worker -l info -P eventlet
+# nohup venv/bin/celery -A mysite worker -l info -P eventlet > config/celery.log 2>&1 &
