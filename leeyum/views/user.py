@@ -65,7 +65,7 @@ class UserViewSet(BaseViewSet):
         获取用户信息
         """
         now_user = request.user
-        return JSONResponse(data=now_user.to_dict(fields=('username', 'phone_number', 'profile_avatar_url')))
+        return JSONResponse(data=now_user.to_normal_dict())
 
     def update(self, request):
         """
