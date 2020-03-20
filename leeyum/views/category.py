@@ -51,6 +51,7 @@ class CategoryViewSet(BaseViewSet):
         return JSONResponse(data={'category_id': category.id,
                                   'category_name': category.name,
                                   'category_intro': category.intro,
+                                  'pic_url': category.pic_url,
                                   'parent_category_list': parent_category_list})
 
     def list_leaves(self, request):

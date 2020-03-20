@@ -127,6 +127,7 @@ class CategoryStore(BaseModel):
     intro = models.CharField('类目介绍', max_length=256, null=True, blank=True)
     parent = models.ForeignKey('self', on_delete=models.DO_NOTHING, related_name='sub_category', null=True, blank=True,
                                default=-1)
+    pic_url = models.CharField('类目图片', max_length=128, null=True, blank=True)
 
     def __str__(self):
         return self.name

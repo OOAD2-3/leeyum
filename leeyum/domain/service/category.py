@@ -71,6 +71,7 @@ class CategoryService(object):
                 'category_id': category.id,
                 'category_name': category.name,
                 'category_intro': category.intro,
+                'pic_url': category.pic_url,
                 'sub_category_list': sub_category_list})
             sub_categories = category.sub_category.all()
             for sub_cat in sub_categories:
@@ -79,6 +80,7 @@ class CategoryService(object):
                     'category_id': sub_cat.id,
                     'category_name': sub_cat.name,
                     'category_intro': sub_cat.intro,
+                    'pic_url': sub_cat.pic_url,
                     'sub_category_list': sec_sub_category_list})
                 for sec_sub_cat in sub_cat.sub_category.all():
                     sec_sub_category_list.extend(self.list(category_id=sec_sub_cat.id))
