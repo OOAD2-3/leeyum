@@ -1,5 +1,6 @@
 from django.db.models import Q
 
+import json
 from rest_framework.exceptions import PermissionDenied
 from leeyum.domain.models import ReportStore, UserStore, ArticleStore, CommentStore
 from django.shortcuts import get_object_or_404
@@ -19,8 +20,8 @@ class ReportService(object):
         comment_id = kwargs.get('comment_id')
         if not comment_id:
             try:
-                create_report = ReportStore(report_reason=report_reason, report_article_id=article_id,
-                                            reporter_id=reporter.id)
+                create_report = ReportStore(report_article_id=article_id, reporter_id=reporter.id)
+                create_report.report_reason = json.dumps(report_reason) if report_reason else "[]"
                 create_report.save()
                 article = get_object_or_404(ArticleStore, id=article_id)
                 reported_times = self.get_reported_times_by_article(article_id=article_id)
@@ -33,9 +34,10 @@ class ReportService(object):
                 raise e
         else:
             try:
-                create_report = ReportStore(report_reason=report_reason, report_article_id=article_id,
+                create_report = ReportStore(report_article_id=article_id,
                                             report_comment_id=comment_id,
                                             reporter_id=reporter.id)
+                create_report.report_reason = json.dumps(report_reason) if report_reason else "[]"
                 create_report.save()
                 comment = get_object_or_404(CommentStore, id=comment_id)
                 reported_times = self.get_reported_times_by_comment(comment_id=comment_id)
