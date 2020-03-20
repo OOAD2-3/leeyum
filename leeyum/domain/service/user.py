@@ -147,4 +147,5 @@ class UserService(object):
 
         return True
 
+
 USER_SERVICE = UserService()

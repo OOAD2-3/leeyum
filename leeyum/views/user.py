@@ -39,14 +39,15 @@ class UserCommonViewSet(BaseViewSet):
         captcha = request.POST.get('captcha')
 
         if not UserStore.objects.filter(phone_number=phone_number):
-            UserStore.objects.create_user(username=phone_number, phone_number=phone_number)
+            username = 'LEEYUM_uID_' + ''.join(phone_number[-4::])
+            UserStore.objects.create_user(username=username, phone_number=phone_number)
 
         user = authenticate(phone_number=phone_number, captcha=captcha)
         if user:
             login(request, user)
             return JSONResponse(code=200,
                                 data={
-                                    'phone_number': user.phone_number
+                                    'username': user.username
                                 },
                                 message='登录成功')
         else:
