@@ -59,8 +59,8 @@ class SensitiveFilter(object):
 
 
 SENSITIVE_FILTER = SensitiveFilter()
-if __name__ == "__main__":
-    sf = SensitiveFilter()
-    content = "大来啊去你妈的打架我不"
-    result = sf.filter(content)
-    print(result)
+# if __name__ == "__main__":
+#     sf = SensitiveFilter()
+#     content = "下三滥"
+#     result = sf.filter(content)
+#     print(result)
