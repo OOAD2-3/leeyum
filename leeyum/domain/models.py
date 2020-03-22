@@ -161,7 +161,8 @@ class ArticleStore(BaseModel):
         'place': '地点',
         'total_number': '总人数',
         'now_number': '当前人数',
-        'team_members': '队伍成员信息'
+        'team_members': '队伍成员信息',
+        'abstract': '摘要'
     }
 
     class Meta:
@@ -178,6 +179,8 @@ class ArticleStore(BaseModel):
     publish_time = models.DateTimeField("发布时间", default=timezone.now)
 
     report_level = models.IntegerField('举报等级', default=NORMAL)
+
+    abstract = models.CharField('摘要', max_length=1024, null=True, blank=True)
 
     # 非es字段
     status = models.IntegerField('状态', default=NORMAL_STATUS)
@@ -215,15 +218,21 @@ class ArticleStore(BaseModel):
         self.pic_urls = json.loads(self.pic_urls) if type(self.pic_urls) is str else self.pic_urls
         self.content = json.loads(self.content) if type(self.content) is str else self.content
         self.tags = json.loads(self.tags) if type(self.tags) is str else self.tags
+        self.abstract = json.loads(self.abstract) if type(self.abstract) is str else self.abstract
         return self
 
     def flat_article(self):
         """
         拍平字段 与concrete article作用相反
         """
-        self.pic_urls = json.dumps(self.pic_urls) if type(self.pic_urls) is not str else self.pic_urls
-        self.content = json.dumps(self.content) if type(self.content) is not str else self.content
-        self.tags = json.dumps(self.tags) if type(self.tags) is not str else self.tags
+        self.pic_urls = json.dumps(self.pic_urls, ensure_ascii=False) \
+            if type(self.pic_urls) is not str else self.pic_urls
+        self.content = json.dumps(self.content, ensure_ascii=False) \
+            if type(self.content) is not str else self.content
+        self.tags = json.dumps(self.tags, ensure_ascii=False) \
+            if type(self.tags) is not str else self.tags
+        self.abstract = json.dumps(self.abstract, ensure_ascii=False) \
+            if type(self.abstract) is not str else self.abstract
         return self
 
     def to_dict(self, fields=None, exclude=tuple()):
@@ -249,7 +258,10 @@ class ArticleStore(BaseModel):
             "tags": copy_article.tags,
             "publish_time": datetime_to_utc(copy_article.publish_time),
             "publisher": copy_article.publisher_id,
-            "category": copy_article.category_id
+            "category": copy_article.category_id,
+            "viewed_times": copy_article.viewed_times,
+            "report_level": copy_article.report_level,
+            "abstract": copy_article.abstract,
         }
 
     def is_team_type(self):

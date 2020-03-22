@@ -61,3 +61,18 @@ class RedisClient(object):
 
 
 REDIS_CLIENT = RedisClient()
+
+
+def func_cache(cache_name, expired_time=60 * 10):
+    cache_format = "{}_{}_{}"
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            result = REDIS_CLIENT.get_object(cache_format.format(cache_name, args, kwargs))
+            if not result:
+                result = func(*args, **kwargs)
+                REDIS_CLIENT.put_object(cache_format.format(cache_name, args, kwargs), result, expired_time)
+            return result
+        return wrapper
+
+    return decorator

@@ -8,6 +8,7 @@ from leeyum.domain.service.action import ACTION_SERVICE
 from leeyum.domain.service.article import ARTICLE_SERVICE, ARTICLE_INDEX_SERVICE
 from leeyum.domain.service.async_job import record_search_word
 from leeyum.domain.service.user import USER_SERVICE
+from leeyum.domain.utils import ShowType
 from leeyum.infra.redis import REDIS_CLIENT
 from leeyum.views import BaseViewSet, BaseSerializer, JSONResponse
 
@@ -95,10 +96,10 @@ class ArticleViewSet(BaseViewSet):
 
         is_main = request.GET.get('is_main')
         if is_main is not None:
-            article_list = ARTICLE_SERVICE.show(category=category, tags=tags)
+            article_list = ARTICLE_SERVICE.show(show_type=ShowType.monthly_hot, category=category, tags=tags)
         else:
             keyword = request.GET.get('keyword')
-            article_list = ARTICLE_INDEX_SERVICE.search(keyword=keyword, category=category, tags=tags)
+            article_list = ARTICLE_INDEX_SERVICE.search(keyword=keyword)
             if reader:
                 record_search_word.delay(keyword=keyword, user_id=reader.id)
 
@@ -106,7 +107,7 @@ class ArticleViewSet(BaseViewSet):
         page_info = paginator.page(page)
 
         return JSONResponse({"article_list": page_info.object_list, "has_next_page": page_info.has_next(),
-                             "page": paginator.num_pages, "page_size": paginator.per_page, "total": paginator.count})
+                             "page": page, "page_size": paginator.per_page, "total": paginator.count})
 
     def take_off(self, request):
         """

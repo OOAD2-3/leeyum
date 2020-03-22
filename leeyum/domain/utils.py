@@ -1,3 +1,4 @@
+import copy
 import re
 import random
 import hashlib
@@ -44,3 +45,27 @@ def datetime_to_utc(_datetime):
 
 def utc_to_datetime(utc_string):
     return datetime.strptime(utc_string, "%Y-%m-%dT%H:%M:%S.%f")
+
+
+def random_list_filter(a_list, number):
+    _list = copy.copy(a_list)
+    if len(_list) <= number:
+        return a_list
+
+    i = 0
+    while i < number:
+        # 获取i到n-1间的随机树
+        j = random.randint(i, len(_list) - 1)
+        # 随机选出的元素放到数组的前面
+        tmp = _list[i]
+        _list[i] = _list[j]
+        a_list[j] = tmp
+        i += 1
+
+    return _list[:number]
+
+
+class ShowType(object):
+    monthly_hot = 'monthly_hot'
+    interest = 'interest'
+    category = 'category'

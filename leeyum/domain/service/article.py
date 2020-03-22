@@ -1,8 +1,10 @@
+from leeyum.domain.service.action import ACTION_SERVICE
 from leeyum.infra.sensitiveFilter import SENSITIVE_FILTER
 
 __all__ = ('ARTICLE_SERVICE', 'ARTICLE_INDEX_SERVICE')
 
 import json
+import jieba.analyse
 
 import requests
 from django.db import transaction
@@ -12,7 +14,7 @@ from rest_framework.exceptions import ValidationError
 
 from leeyum.domain.models import ArticleStore, FileUploadRecorder, UserStore
 from leeyum.domain.service.category import CATEGORY_SERVICE
-from leeyum.domain.utils import utc_to_datetime
+from leeyum.domain.utils import utc_to_datetime, random_list_filter, ShowType
 from leeyum.infra.aliCloud import ALI_STORAGE
 from leeyum.resource.exception import FileTypeException, FileTooBigException, JoinTeamException
 
@@ -44,6 +46,8 @@ class ArticleService(object):
 
         try:
             create_article = ArticleStore(title=title, publisher_id=creator.id)
+            create_article.abstract = jieba.analyse.extract_tags(
+                "{},{}".format(create_article.title, content_details.get('body')), topK=5)
             create_article.pic_urls = json.dumps(pic_urls)
             create_article.content = create_article.format_content(content_details)
             create_article.tags = json.dumps(tags) if tags else "[]"
@@ -140,10 +144,54 @@ class ArticleService(object):
         FileUploadRecorder.abandon_these_files(deleted_pic_urls)
         FileUploadRecorder.use_these_files(add_pic_urls)
 
-    def show(self, category, tags):
+    def show(self, show_type, user=None, category=None, tags=None, order_type=None):
         """
-        首页-兴趣推荐
+        首页-兴趣推荐 & 本月热门 & 分类目
         """
+        if show_type == ShowType.interest:
+            return self._show_interest_recommend(user.id) if user else self._show_interest_recommend(-1)
+        elif show_type == ShowType.monthly_hot:
+            return self._show_monthly_recommend()
+        elif show_type == ShowType.category:
+            return self._show_cate_list(category, tags, order_type)
+        else:
+            return []
+
+    def _show_monthly_recommend(self):
+        article_ids = ACTION_SERVICE.retrieve_highest_click_article(number=30)
+
+        result = []
+        for article in ArticleStore.objects.filter(id__in=article_ids):
+            article.concrete_article()
+            result.append(article.to_dict(exclude=('publisher',)))
+
+        return result
+
+    def _show_interest_recommend(self, user_id):
+        """
+        1. 获取全体 热词(关键字) + 类目点击 + 分析点击发文 50%
+        2. 获取单体 热词(关键字) + 类目点击 + 分析点击发文 50%
+
+        3. 关键字60% 类目30% 标签10%
+        """
+        all_people_article_keywords, all_people_article_categories, all_people_article_tags = \
+            ACTION_SERVICE.analyze_highest_click_article(number=10)
+        my_article_keywords, my_article_categories, my_article_tags = \
+            ACTION_SERVICE.analyze_highest_click_article(number=10, user_id=user_id)
+
+        all_people_search_keywords = ACTION_SERVICE.retrieve_hot_word(number=10)
+        my_search_keywords = ACTION_SERVICE.retrieve_hot_word(number=10, user_id=user_id)
+
+        all_people_click_categories = ACTION_SERVICE.retrieve_highest_click_category(number=10)
+        my_click_categories = ACTION_SERVICE.retrieve_highest_click_category(number=10, user_id=user_id)
+
+        keywords = random_list_filter(all_people_search_keywords + my_search_keywords, number=5)
+        categories = random_list_filter(all_people_click_categories + my_click_categories, number=2)
+        tags = random_list_filter(all_people_article_tags + my_article_tags, number=2)
+
+        return ARTICLE_INDEX_SERVICE.search(keyword=keywords, categories=categories, tags=tags)
+
+    def _show_cate_list(self, category, tags, order_type):
         q = Q()
         if category and category > 0:
             # category只能单选查询
@@ -213,14 +261,6 @@ class ArticleService(object):
     def is_inside_team(self, article, user):
         return bool(article.team_members.filter(id=user.id).first())
 
-    def _back_door_team(self):
-        for article in ArticleStore.objects.all():
-            article.concrete_article()
-            for members in article.content.get('team_members', []):
-                user = UserStore.objects.get(phone_number=members.get('phone_number'))
-                if not article.team_members.filter(id=user.id):
-                    article.team_members.add(user)
-
 
 class ArticleIndexService(object):
     """
@@ -243,6 +283,9 @@ class ArticleIndexService(object):
         return requests.delete(self.doc_url.format(doc_id=article_id))
 
     def publish(self, article):
+        if article.status == ArticleStore.DELETE_STATUS:
+            return
+
         data = article.generate_es_put_data()
         res = self._write(article.id, data)
 
@@ -264,12 +307,13 @@ class ArticleIndexService(object):
         pass
 
     def search(self, keyword, *args, **kwargs):
-        category = kwargs.get('category')
-        tags = kwargs.get('tags')
+        categories = kwargs.get('categories', [])
+        tags = kwargs.get('tags', [])
 
         # 请求es服务器
-        keywords = keyword.split()
-        search_dsl = self._get_search_dsl(keywords, category, tags)
+        if type(keyword) is str:
+            keyword = keyword.split()
+        search_dsl = self._get_search_dsl(keyword, categories, tags)
         res = self._read(search_dsl)
         res = json.loads(res.text)
 
@@ -293,13 +337,13 @@ class ArticleIndexService(object):
         return article.to_dict(exclude=('publisher',))
 
     @staticmethod
-    def _get_search_dsl(keywords, category=None, tags=None):
+    def _get_search_dsl(keywords, categories=tuple(), tags=tuple()):
         if type(keywords) is not list and type(keywords) is not tuple:
             raise Exception()
         base_search_dsl = {
             "query": {
                 "bool": {
-                    "must": []
+                    "should": []
                 }
             },
             "highlight": {
@@ -312,11 +356,6 @@ class ArticleIndexService(object):
                 "post_tags": "</123>"
             }
         }
-        keywords_dsl_part = {
-            "bool": {
-                "should": []
-            }
-        }
         for keyword in keywords:
             keywords_should_dsl_part = [
                 {
@@ -327,12 +366,18 @@ class ArticleIndexService(object):
                                 "should": [
                                     {
                                         "match_phrase": {
-                                            "content.body": keyword
+                                            "content.body": {
+                                                "query": keyword,
+                                                "boost": 4
+                                            }
                                         }
                                     },
                                     {
                                         "match_phrase": {
-                                            "content.place": keyword
+                                            "content.place": {
+                                                "query": keyword,
+                                                "boost": 4
+                                            }
                                         }
                                     }
                                 ]
@@ -342,36 +387,47 @@ class ArticleIndexService(object):
                 },
                 {
                     "match_phrase": {
-                        "title": keyword
+                        "title": {
+                            "query": keyword,
+                            "boost": 4
+                        }
                     }
                 },
                 {
                     "match_phrase": {
-                        "tags.keyword": keyword
+                        "tags.keyword": {
+                            "query": keyword,
+                            "boost": 4
+                        }
                     }
                 },
             ]
-            keywords_dsl_part['bool']['should'].extend(keywords_should_dsl_part)
-        base_search_dsl['query']['bool']['must'].append(keywords_dsl_part)
+            base_search_dsl['query']['bool']['should'].extend(keywords_should_dsl_part)
 
         if type(tags) is list or type(tags) is tuple:
             tags = ','.join(tags)
 
-        if tags:
+        for tag in tags:
             tag_dsl_part = {
                 "match": {
-                    "tags": tags
+                    "tags": {
+                        "query": tag,
+                        "boost": 2
+                    }
                 }
             }
-            base_search_dsl['query']['bool']['must'].append(tag_dsl_part)
+            base_search_dsl['query']['bool']['should'].append(tag_dsl_part)
 
-        if category:
+        for category in categories:
             category_dsl_part = {
                 "match": {
-                    "category": category
+                    "category": {
+                        "query": category,
+                        "boost": 2
+                    }
                 }
             }
-            base_search_dsl['query']['bool']['must'].append(category_dsl_part)
+            base_search_dsl['query']['bool']['should'].append(category_dsl_part)
         return json.dumps(base_search_dsl)
 
     def _backdoor_refresh_es_data(self, is_all=False):
