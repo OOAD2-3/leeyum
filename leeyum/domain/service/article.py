@@ -269,6 +269,7 @@ class ArticleIndexService(object):
 
     doc_url = 'http://120.26.88.97:9200/article/_doc/{doc_id}'
     search_url = 'http://120.26.88.97:9200/article/_search'
+    update_url = 'http://120.26.88.97:9200/article/_doc/{doc_id}/_update'
 
     def _write(self, article_id, data):
         if type(data) is not str:
@@ -278,6 +279,12 @@ class ArticleIndexService(object):
 
     def _read(self, data):
         return requests.get(self.search_url, data=data, headers={'Content-Type': 'application/json'})
+
+    def _update(self, article_id, data):
+        if type(data) is not str:
+            data = json.dumps(data)
+        return requests.put(self.update_url.format(doc_id=article_id), data=data,
+                            headers={'Content-Type': 'application/json'})
 
     def _delete(self, article_id):
         return requests.delete(self.doc_url.format(doc_id=article_id))
@@ -306,6 +313,12 @@ class ArticleIndexService(object):
     def update(self, article):
         pass
 
+    def update_view_time(self, article_id):
+        data = {
+            "script": "ctx._source.viewed_times+=1"
+        }
+        return self._update(article_id, data)
+
     def search(self, keyword, *args, **kwargs):
         categories = kwargs.get('categories', [])
         tags = kwargs.get('tags', [])
@@ -333,6 +346,9 @@ class ArticleIndexService(object):
         article.publish_time = utc_to_datetime(source.get('publish_time'))
         article.publisher_id = source.get('publisher')
         article.category_id = source.get('category')
+        article.viewed_times = source.get('viewed_times')
+        article.report_level = source.get('report_level')
+        article.abstract = source.get('abstract')
 
         return article.to_dict(exclude=('publisher',))
 
