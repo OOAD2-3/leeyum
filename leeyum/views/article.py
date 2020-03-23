@@ -158,4 +158,5 @@ class ArticleRelationViewSet(BaseViewSet):
     def get_publish_recommend(self, request):
         article_id = request.GET.get('article_id')
         res = ARTICLE_SERVICE.publish_recommend(article_id=article_id)
-        return JSONResponse(res)
+        message = "success" if res else "not found"
+        return JSONResponse(res, message=message)
