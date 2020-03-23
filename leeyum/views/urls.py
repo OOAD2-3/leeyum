@@ -31,6 +31,7 @@ urlpatterns = [
     path('article/details/', ArticleViewSet.as_view({'get': 'retrieve'})),
     path('article/join_team/', ArticleViewSet.as_view({'put': 'join_team'})),
     path('article/leave_team/', ArticleViewSet.as_view({'put': 'leave_team'})),
+    path('article/publish_recommend/', ArticleRelationViewSet.as_view({'get': 'get_publish_recommend'})),
 
     path('article/hot_words/', ArticleRelationViewSet.as_view({'get': 'get_hot_word'})),
 

@@ -1,5 +1,3 @@
-import json
-
 from django.core.paginator import Paginator
 from rest_framework.exceptions import ValidationError, NotAuthenticated
 
@@ -99,7 +97,7 @@ class ArticleViewSet(BaseViewSet):
             article_list = ARTICLE_SERVICE.show(show_type=ShowType.monthly_hot, category=category, tags=tags)
         else:
             keyword = request.GET.get('keyword')
-            article_list = ARTICLE_INDEX_SERVICE.search(keyword=keyword)
+            article_list = ARTICLE_INDEX_SERVICE.max_search(keyword=keyword)
             if reader:
                 record_search_word.delay(keyword=keyword, user_id=reader.id)
 
@@ -157,3 +155,7 @@ class ArticleRelationViewSet(BaseViewSet):
 
         return JSONResponse(hot_words)
 
+    def get_publish_recommend(self, request):
+        article_id = request.GET.get('article_id')
+        res = ARTICLE_SERVICE.publish_recommend(article_id=article_id)
+        return JSONResponse(res)

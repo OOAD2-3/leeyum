@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
-from leeyum.domain.models import ArticleStore, FileUploadRecorder, UserStore
+from leeyum.domain.models import ArticleStore, FileUploadRecorder
 from leeyum.domain.service.category import CATEGORY_SERVICE
 from leeyum.domain.utils import utc_to_datetime, random_list_filter, ShowType
 from leeyum.infra.aliCloud import ALI_STORAGE
@@ -47,7 +47,8 @@ class ArticleService(object):
         try:
             create_article = ArticleStore(title=title, publisher_id=creator.id)
             create_article.abstract = jieba.analyse.extract_tags(
-                "{},{}".format(create_article.title, content_details.get('body')), topK=5)
+                "{},{},{}".format(create_article.title, content_details.get('body'), content_details.get('place', '')),
+                topK=5)
             create_article.pic_urls = json.dumps(pic_urls)
             create_article.content = create_article.format_content(content_details)
             create_article.tags = json.dumps(tags) if tags else "[]"
@@ -189,7 +190,7 @@ class ArticleService(object):
         categories = random_list_filter(all_people_click_categories + my_click_categories, number=2)
         tags = random_list_filter(all_people_article_tags + my_article_tags, number=2)
 
-        return ARTICLE_INDEX_SERVICE.search(keyword=keywords, categories=categories, tags=tags)
+        return ARTICLE_INDEX_SERVICE.max_search(keyword=keywords, categories=categories, tags=tags)
 
     def _show_cate_list(self, category, tags, order_type):
         q = Q()
@@ -234,6 +235,9 @@ class ArticleService(object):
 
         team_article.save()
 
+        # 同步es，主要为了首页展示
+        ARTICLE_INDEX_SERVICE.update_team_now_number(article_id=article_id, is_add=True)
+
         return team_article
 
     @transaction.atomic
@@ -256,10 +260,54 @@ class ArticleService(object):
 
         team_article.save()
 
+        # 同步es，主要为了首页展示
+        ARTICLE_INDEX_SERVICE.update_team_now_number(article_id=article_id, is_add=False)
+
         return team_article
 
     def is_inside_team(self, article, user):
         return bool(article.team_members.filter(id=user.id).first())
+
+    def publish_recommend(self, article_id):
+        """
+        发布撮合
+        1. 买租 《=》 卖租
+        2. 组队
+        """
+        article = self.get_details(article_id)
+        recommend_article_list = []
+
+        rent_and_sale_category = [14, 16, 30]
+        buy_and_hire_category = [15, 17, 30]
+        play_and_study_team_category = [19, 31]
+        car_team_category = [20, 31]
+
+        if article.category_id in rent_and_sale_category:
+            recommend_article_list.extend(ARTICLE_INDEX_SERVICE.min_search(keyword=article.abstract,
+                                                                           categories=buy_and_hire_category))
+        elif article.category_id in buy_and_hire_category:
+            recommend_article_list.extend(ARTICLE_INDEX_SERVICE.min_search(keyword=article.abstract,
+                                                                           categories=rent_and_sale_category))
+        elif article.category_id in play_and_study_team_category:
+            res = ARTICLE_INDEX_SERVICE.min_search(keyword=article.abstract, categories=play_and_study_team_category)
+            recommend_article_list.extend([item for item in res if item.get('id') != article_id])
+        elif article.category_id in car_team_category:
+            # TODO 匹配地点和时间
+            res = ARTICLE_INDEX_SERVICE.min_search(keyword=article.abstract, categories=car_team_category)
+            recommend_article_list.extend([item for item in res if item.get('id') != article_id])
+        else:
+            pass
+        return recommend_article_list
+
+    def temp(self):
+        for article in ArticleStore.objects.exclude(status=ArticleStore.DELETE_STATUS):
+            article.concrete_article()
+            article.abstract = jieba.analyse.extract_tags(
+                "{},{},{}".format(article.title, article.content.get('body'), article.content.get('place', '')),
+                topK=5)
+            article.flat_article()
+            article.save()
+            ARTICLE_INDEX_SERVICE.publish(article)
 
 
 class ArticleIndexService(object):
@@ -319,14 +367,45 @@ class ArticleIndexService(object):
         }
         return self._update(article_id, data)
 
-    def search(self, keyword, *args, **kwargs):
+    def update_team_now_number(self, article_id, is_add=True):
+        if is_add:
+            data = {
+                "script": "ctx._source.content.now_number+=1"
+            }
+        else:
+            data = {
+                "script": "ctx._source.content.now_number-=1"
+            }
+        return self._update(article_id, data)
+
+    def max_search(self, keyword, *args, **kwargs):
+        """
+        宽松搜索， 关键字无须满足某类目下
+        """
         categories = kwargs.get('categories', [])
         tags = kwargs.get('tags', [])
 
         # 请求es服务器
         if type(keyword) is str:
             keyword = keyword.split()
-        search_dsl = self._get_search_dsl(keyword, categories, tags)
+        search_dsl = self._get_max_search_dsl(keyword, categories, tags)
+        res = self._read(search_dsl)
+        res = json.loads(res.text)
+
+        res_data_list = res.get('hits', {}).get('hits', [])
+        return [self.format(res_data) for res_data in res_data_list]
+
+    def min_search(self, keyword, *args, **kwargs):
+        """
+        严格搜索， 关键字必须满足某类目下
+        """
+        categories = kwargs.get('categories', [])
+        tags = kwargs.get('tags', [])
+
+        # 请求es服务器
+        if type(keyword) is str:
+            keyword = keyword.split()
+        search_dsl = self._get_min_search_dsl(keyword, categories, tags)
         res = self._read(search_dsl)
         res = json.loads(res.text)
 
@@ -353,7 +432,7 @@ class ArticleIndexService(object):
         return article.to_dict(exclude=('publisher',))
 
     @staticmethod
-    def _get_search_dsl(keywords, categories=tuple(), tags=tuple()):
+    def _get_max_search_dsl(keywords, categories=tuple(), tags=tuple()):
         if type(keywords) is not list and type(keywords) is not tuple:
             raise Exception()
         base_search_dsl = {
@@ -444,6 +523,121 @@ class ArticleIndexService(object):
                 }
             }
             base_search_dsl['query']['bool']['should'].append(category_dsl_part)
+        return json.dumps(base_search_dsl)
+
+    @staticmethod
+    def _get_min_search_dsl(keywords, categories=tuple(), tags=tuple()):
+        if type(keywords) is not list and type(keywords) is not tuple:
+            raise Exception()
+        base_search_dsl = {
+            "query": {
+                "bool": {
+                    "must": []
+                }
+            },
+            "highlight": {
+                "fields": {
+                    "content.body": {},
+                    "title": {},
+                    "tags": {}
+                },
+                "pre_tags": "<123>",
+                "post_tags": "</123>"
+            }
+        }
+        keywords_dsl_part = {
+            "bool": {
+                "should": []
+            }
+        }
+        for keyword in keywords:
+            keywords_should_dsl_part = [
+                {
+                    "nested": {
+                        "path": "content",
+                        "query": {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "match_phrase": {
+                                            "content.body": {
+                                                "query": keyword,
+                                                "boost": 4
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "match_phrase": {
+                                            "content.place": {
+                                                "query": keyword,
+                                                "boost": 4
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "match_phrase": {
+                        "title": {
+                            "query": keyword,
+                            "boost": 4
+                        }
+                    }
+                },
+                {
+                    "match_phrase": {
+                        "tags.keyword": {
+                            "query": keyword,
+                            "boost": 4
+                        }
+                    }
+                },
+            ]
+            keywords_dsl_part['bool']['should'].extend(keywords_should_dsl_part)
+
+        base_search_dsl['query']['bool']['must'].append(keywords_dsl_part)
+
+        if type(tags) is list or type(tags) is tuple:
+            tags = ','.join(tags)
+
+        # tag
+        tags_dsl_part = {
+            "bool": {
+                "should": []
+            }
+        }
+        for tag in tags:
+            tag_should_dsl_part = {
+                "match": {
+                    "tags": {
+                        "query": tag,
+                        "boost": 2
+                    }
+                }
+            }
+            tags_dsl_part['bool']['should'].append(tag_should_dsl_part)
+        base_search_dsl['query']['bool']['must'].append(tags_dsl_part)
+
+        # category
+        categories_dsl_part = {
+            "bool": {
+                "should": []
+            }
+        }
+        for category in categories:
+            category_should_dsl_part = {
+                "match": {
+                    "category": {
+                        "query": category,
+                        "boost": 2
+                    }
+                }
+            }
+            categories_dsl_part['bool']['should'].append(category_should_dsl_part)
+        base_search_dsl['query']['bool']['must'].append(categories_dsl_part)
         return json.dumps(base_search_dsl)
 
     def _backdoor_refresh_es_data(self, is_all=False):
