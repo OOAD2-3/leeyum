@@ -139,16 +139,17 @@ class UserService(object):
 
     def list_viewed_article(self, user, *args, **kwargs):
         # 浏览记录为30条
-        viewed_articles = []
         viewed_article_id = REDIS_CLIENT.get_history(name=user.id)
-        # articles = ArticleStore.objects.in_bulk(viewed_article_id)
+
+        result = [0 for _ in range(0, len(viewed_article_id))]
         for article_id in viewed_article_id:
             article = ArticleStore.objects.filter(id=article_id).first()
             if article:
                 article.concrete_article()
-                viewed_articles.append(article)
+                result[viewed_article_id.index(str(article_id))] = article.to_dict(
+                    exclude=('publisher', 'report_level'))
 
-        return viewed_articles
+        return [item for item in result if item != 0]
 
     def clear_viewed_article(self, user, *args, **kwargs):
         # 清除浏览记录

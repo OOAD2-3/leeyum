@@ -6,7 +6,7 @@ from rest_framework.exceptions import ParseError
 from django.contrib.auth import login, authenticate, logout
 from rest_framework.permissions import IsAuthenticated
 
-from leeyum.domain.models import UserStore
+from leeyum.domain.models import UserStore, ArticleStore
 
 from leeyum.domain.service.user import USER_SERVICE
 from leeyum.resource.exception import LoginException
@@ -132,9 +132,8 @@ class UserViewSet(BaseViewSet):
         viewed_article_list = []
         viewed_articles = USER_SERVICE.list_viewed_article(user=user)
         for article in viewed_articles:
-            if not article.is_take_off():
-                article.concrete_article()
-                viewed_article_list.append(article.to_dict(exclude=('publisher', 'report_level')))
+            if article['status'] != ArticleStore.DELETE_STATUS:
+                viewed_article_list.append(article)
         return JSONResponse(data=viewed_article_list)
 
     def list_teams(self, request):
