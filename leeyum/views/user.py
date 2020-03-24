@@ -68,17 +68,6 @@ class UserViewSet(BaseViewSet):
         now_user = request.user
         return JSONResponse(data=now_user.to_normal_dict())
 
-    def update(self, request):
-        """
-        修改用户信息
-        """
-        now_user = request.user
-        username = request.json_data.get('username')
-        profile_avatar_url = request.json_data.get('profile_avatar_url')
-        update_user = USER_SERVICE.update(user=now_user, username=username,
-                                          profile_avatar_url=profile_avatar_url)
-        return JSONResponse(data=update_user.to_dict(fields=('username', 'phone_number', 'profile_avatar_url')))
-
     def add_like_article(self, request):
         """
         添加收藏
@@ -180,19 +169,22 @@ class UserViewSet(BaseViewSet):
                         html_message='<div><span style="font-size: 24px; color: #66c0f4; font-family: Arial, Helvetica, sans-serif; font-weight: bold;"> {code} </span><div>')
         return JSONResponse(data="发送成功") if res == 1 else JSONResponse(data="发送失败")
 
-    def accept_settings(self, request):
+    def update(self, request):
         """
+        修改用户信息
         用户设置
         开关设置
         """
+        now_user = request.user
+        username = request.json_data.get('username')
+        profile_avatar_url = request.json_data.get('profile_avatar_url')
         accept_recommended_message = request.json_data.get('accept_recommended_message')
         accept_publish_article_recommend_to_others = request.json_data.get('accept_publish_article_recommend_to_others')
-        if accept_recommended_message is not None:
-            request.user.accept_recommended_message = bool(accept_recommended_message)
-        if accept_publish_article_recommend_to_others is not None:
-            request.user.accept_publish_article_recommend_to_others = bool(accept_publish_article_recommend_to_others)
-        request.user.save()
-        return JSONResponse(data=request.user.to_normal_dict())
+        update_user = USER_SERVICE.update(user=now_user, username=username,
+                                          profile_avatar_url=profile_avatar_url,
+                                          accept_recommended_message=accept_recommended_message,
+                                          accept_publish_article_recommend_to_others=accept_publish_article_recommend_to_others)
+        return JSONResponse(data=update_user.to_normal_dict())
 
     def clear_viewed_article(self, request):
         """

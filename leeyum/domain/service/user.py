@@ -42,13 +42,20 @@ class UserService(object):
         """
         修改用户信息
         """
-        fields = ['username', 'profile_avatar_url']
+        fields = ['username', 'profile_avatar_url', 'accept_recommended_message',
+                  'accept_publish_article_recommend_to_others']
         update_fields = []
 
         for f in fields:
             if kwargs.get(f):
                 update_fields.append(f)
                 value = kwargs.get(f)
+                if f == 'accept_recommended_message':
+                    if value is not None:
+                        user.accept_recommended_message = bool(value)
+                if f == 'accept_publish_article_recommend_to_others':
+                    if value is not None:
+                        user.accept_publish_article_recommend_to_others = bool(value)
 
                 setattr(user, f, value)
         user.save()
@@ -134,6 +141,7 @@ class UserService(object):
         # 浏览记录为30条
         viewed_articles = []
         viewed_article_id = REDIS_CLIENT.get_history(name=user.id)
+        # articles = ArticleStore.objects.in_bulk(viewed_article_id)
         for article_id in viewed_article_id:
             article = ArticleStore.objects.filter(id=article_id).first()
             if article:
