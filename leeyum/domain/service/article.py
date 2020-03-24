@@ -167,7 +167,7 @@ class ArticleService(object):
             article.concrete_article()
             result[article_ids.index(str(article.id))] = article.to_dict(exclude=('publisher',))
 
-        return result
+        return [item for item in result if item != 0]
 
     def _show_interest_recommend(self, user_id):
         """
