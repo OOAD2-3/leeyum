@@ -163,7 +163,7 @@ class ArticleService(object):
         article_ids = ACTION_SERVICE.retrieve_highest_click_article(number=number)
 
         result = [0 for _ in range(0, number)]
-        for article in ArticleStore.objects.filter(id__in=article_ids):
+        for article in ArticleStore.objects.filter(id__in=article_ids, status=ArticleStore.NORMAL_STATUS):
             article.concrete_article()
             result[article_ids.index(str(article.id))] = article.to_dict(exclude=('publisher',))
 
