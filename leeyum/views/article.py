@@ -88,13 +88,19 @@ class ArticleViewSet(BaseViewSet):
             category = int(category)
 
         # tags 参数使用,分割符传递
-        tags = request.GET.get('tags', '')
+        tags = request.GET.get('tags')
         if tags:
             tags = tags.split(',')
 
-        is_main = request.GET.get('is_main')
-        if is_main is not None:
-            article_list = ARTICLE_SERVICE.show(show_type=ShowType.monthly_hot, category=category, tags=tags)
+        if request.GET.get('is_main') is not None:
+            if request.GET.get('recommend') is not None:
+                show_type = ShowType.interest
+            elif category or tags:
+                show_type = ShowType.category
+            else:
+                show_type = ShowType.monthly_hot
+
+            article_list = ARTICLE_SERVICE.show(show_type=show_type, category=category, tags=tags)
         else:
             keyword = request.GET.get('keyword')
             article_list = ARTICLE_INDEX_SERVICE.max_search(keyword=keyword)
