@@ -159,12 +159,13 @@ class ArticleService(object):
             return []
 
     def _show_monthly_recommend(self):
-        article_ids = ACTION_SERVICE.retrieve_highest_click_article(number=30)
+        number = 30
+        article_ids = ACTION_SERVICE.retrieve_highest_click_article(number=number)
 
-        result = []
+        result = [0 for _ in range(0, number)]
         for article in ArticleStore.objects.filter(id__in=article_ids):
             article.concrete_article()
-            result.append(article.to_dict(exclude=('publisher',)))
+            result[article_ids.index(str(article.id))] = article.to_dict(exclude=('publisher',))
 
         return result
 
