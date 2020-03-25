@@ -33,10 +33,10 @@ class SensitiveFilter(object):
         if i == len(chars) - 1:
             level[self.delimit] = 0
 
-    def filter(self, content):
+    def filter(self, content, repl='*'):
         content = content.lower()
         start = 0
-        # count = 0
+        ret = []
         while start < len(content):
             level = self.sensitive_chains
             step_ins = 0
@@ -46,21 +46,25 @@ class SensitiveFilter(object):
                     if self.delimit not in level[char]:
                         level = level[char]
                     else:
-                        return False
-                        # 能够给出敏感词个数
-                        # count += 1
-                        # start += step_ins - 1
-                        # break
+                        ret.append(repl * step_ins)
+                        start += step_ins - 1
+                        break
                 else:
+                    ret.append(content[start])
                     break
+            else:
+                ret.append(content[start])
             start += 1
-
-        return True
+        ret = ''.join(ret)
+        if '*' in ret:
+            return False, ret
+        else:
+            return True, ret
 
 
 SENSITIVE_FILTER = SensitiveFilter()
-# if __name__ == "__main__":
-#     sf = SensitiveFilter()
-#     content = "下三滥"
-#     result = sf.filter(content)
-#     print(result)
+if __name__ == "__main__":
+    sf = SensitiveFilter()
+    content = "测试"
+    result = sf.filter(content)
+    print(result)

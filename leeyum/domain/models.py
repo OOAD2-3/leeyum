@@ -87,16 +87,6 @@ class UserStore(AbstractUser, BaseModel):
                                     'accept_publish_article_recommend_to_others', 'student_number'))
 
 
-# class UserViewRel(BaseModel):
-#     """
-#     浏览记录
-#     """
-#     user_view_case_id = models.IntegerField('浏览记录id', default=-1)
-#     user_view_user_id = models.IntegerField('浏览者id', default=-1)
-#
-#
-
-
 class TagStore(BaseModel):
     """
     标签

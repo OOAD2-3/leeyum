@@ -41,8 +41,9 @@ class ArticleService(object):
 
         if SENSITIVE_FILTER.filter(title) is False:
             raise ValidationError('新建失败，标题含有敏感词！')
-        if SENSITIVE_FILTER.filter(json.dumps(content_details)) is False:
-            raise ValidationError('新建失败，内容含有敏感词！')
+        res, ret = SENSITIVE_FILTER.filter(json.dumps(content_details.get('body')))
+        if not res:
+            raise ValidationError('新建失败，内容含有敏感词：' + ret)
 
         try:
             create_article = ArticleStore(title=title, publisher_id=creator.id)
