@@ -184,7 +184,7 @@ class ArticleStore(BaseModel):
         """
         format_dict = {}
         for field in set(self.content_fields):
-            if content_details.get(field):
+            if content_details.get(field) is not None:
                 # 发布为组队信息，冗余队长信息，初始化队员信息
                 if field == 'total_number':
                     leader = self.publisher.to_dict(fields=('phone_number',))
