@@ -22,7 +22,7 @@ class AdvertViewSet(BaseViewSet):
         advert_id = request.GET.get('id')
         advert = ADVERT_SERVICE.get_details(advert_id)
 
-        dict_res = advert.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created', 'viewed_times'))
+        dict_res = advert.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created'))
         # 发布者信息
         publisher = advert.publisher.to_dict(fields=('username', 'phone_number'))
         dict_res['publisher'] = publisher

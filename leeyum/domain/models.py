@@ -414,6 +414,7 @@ class AdvertStore(BaseModel):
     title = models.CharField('广告标题', max_length=1024, null=True, blank=False)
     pic_urls = models.CharField('图片url', max_length=2048, null=True, blank=False)
     content = models.CharField('广告内容', max_length=1024 * 10, null=True, blank=True)
+    viewed_times = models.IntegerField('浏览次数', null=True, blank=True, default=0)
 
     tags = models.CharField('标签 拍平存储', max_length=1024, null=True, blank=True)
 
@@ -477,7 +478,8 @@ class AdvertStore(BaseModel):
             "content": copy_advert.content,
             "tags": copy_advert.tags,
             "publish_time": datetime_to_utc(copy_advert.publish_time),
-            "publisher": copy_advert.publisher_id,
+            "publisher": copy_advert.publihser_id,
+            "viewed_times": copy_advert.viewed_times,
             "is_advert": copy_advert.is_advert,
         }
 

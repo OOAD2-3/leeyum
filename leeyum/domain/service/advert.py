@@ -27,8 +27,13 @@ class AdvertService(object):
         adverts = AdvertStore.objects.all()
         for advert in adverts:
             advert.concrete_advert()
-            article_list.insert(step, advert.to_dict())
-            step += 5
+            dict_res = advert.to_dict(exclude=('publisher', 'gmt_modified', 'gmt_created'))
+            dict_res['category'] = ['广告', '广告']
+            if step < len(article_list):
+                article_list.insert(step, dict_res)
+                step += 5
+            else:
+                article_list.append(dict_res)
 
         return article_list
 
