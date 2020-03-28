@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError, NotAuthenticated
 
 from leeyum.domain.models import ArticleStore
 from leeyum.domain.service.action import ACTION_SERVICE
+from leeyum.domain.service.advert import ADVERT_SERVICE
 from leeyum.domain.service.article import ARTICLE_SERVICE, ARTICLE_INDEX_SERVICE
 from leeyum.domain.service.async_job import record_search_word
 from leeyum.domain.service.user import USER_SERVICE
@@ -106,6 +107,8 @@ class ArticleViewSet(BaseViewSet):
             article_list = ARTICLE_INDEX_SERVICE.max_search(keyword=keyword)
             if reader:
                 record_search_word.delay(keyword=keyword, user_id=reader.id)
+
+        article_list = ADVERT_SERVICE.add_to_article(article_list)
 
         paginator = Paginator(article_list, page_size)
         page_info = paginator.page(page)

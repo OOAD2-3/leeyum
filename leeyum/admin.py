@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from leeyum.domain import models
-from leeyum.domain.models import FileUploadRecorder, ArticleStore
+from leeyum.domain.models import FileUploadRecorder, ArticleStore, AdvertStore
 from leeyum.domain.service.article import ARTICLE_INDEX_SERVICE
 
 admin.site.site_header = '流云校园'
@@ -174,3 +174,75 @@ class ActionDefinitionAdmin(admin.ModelAdmin):
 @admin.register(models.ExpressNewsStore)
 class ExpressNewsAdmin(admin.ModelAdmin):
     list_display = ('news_title', 'news_target_url', 'news_tag')
+
+
+@admin.register(models.AdvertStore)
+class AdvertAdmiin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'pic_urls', 'content', 'tags', 'publisher', 'publish_time', 'status')
+
+    # filter_horizontal = ('tags',)
+
+    # 自定义字段 - 图片预览
+    def image_shows(self, obj):
+        image = obj.pic_urls
+        if image:
+            image_html = ""
+            for img_url in json.loads(image):
+                artwork = ".".join(img_url.split(".")[0:-2])
+                # 根据业务需求, 拿到所有图片的url, 拼接 img 及 a 标签
+                image_html += '<a href="{}" target="_blank"><img src="{}" style="width:200px; height:200px; margin-right:2.5px; margin-left:2.5px; margin-bottom:5px"/></a>'.format(
+                    artwork, img_url)
+            html = "<div>" + image_html + "</div><div>提示: 点击图片查看原图</div>"
+        else:
+            html = "-"
+        return mark_safe(html)  # 取消转义
+
+    def content_shows(self, obj):
+        try:
+            content = json.loads(obj.content)
+            if content:
+                html = ''
+                for k, v in content.items():
+                    html += '<div>{} {}: {}</div>'.format(obj.get_content_field_intro(k), k, v)
+
+            else:
+                html = '-'
+        except Exception as e:
+            html = '<div>content 存储结构存在问题，<a href="www.json.cn" target="_blank">请检查</a></div><div>{}</div>'.format(
+                obj.content)
+
+        return mark_safe(html)
+
+    content_shows.allow_tags = True
+    content_shows.short_description = '详情预览'
+
+    image_shows.short_description = "图片预览"
+    image_shows.allow_tags = True
+
+    # 自定义字段 -
+
+    # 重写编辑页, 继承父类方法
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        self.fields = ('title', 'pic_urls', 'image_shows', 'content', 'content_shows',
+                       'tags', 'publisher', 'publish_time')
+        self.readonly_fields = ('image_shows', 'content_shows')
+        return super().change_view(request, object_id, form_url='', extra_context=extra_context)
+
+    def add_view(self, request, form_url='', extra_context=None):
+        self.fields = ('title', 'pic_urls', 'content', 'tags', 'publisher', 'publish_time')
+        return super().add_view(request, form_url='', extra_context=None)
+
+    def delete_model(self, request, obj):
+        FileUploadRecorder.abandon_these_files(json.loads(obj.pic_urls))
+        obj.status = ArticleStore.DELETE_STATUS
+        obj.save()
+        # super().delete_model(request, obj)
+
+    def save_model(self, request, obj, form, change):
+        # 123, 1234 -> ["123", "1234"]
+        obj.pic_urls = json.dumps(obj.pic_urls.split(','))
+        # {"body": "123"} -> {"body": "123"}
+        obj.content = obj.format_content(json.loads(obj.content))
+        # 123, 456 ->["123", "456"]
+        obj.tags = json.dumps(obj.tags.split('，')) if obj.tags else "[]"
+        return super().save_model(request, obj, form, change)

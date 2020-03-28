@@ -1,6 +1,7 @@
 from django.urls import path
 
 from leeyum.views.action import ActionViewSet
+from leeyum.views.advert import AdvertViewSet
 from leeyum.views.front_config import FrontConfigViewSet
 from leeyum.views.report import ReportViewSet
 from leeyum.views.tag import TagViewSet
@@ -34,6 +35,8 @@ urlpatterns = [
     path('article/publish_recommend/', ArticleRelationViewSet.as_view({'get': 'get_publish_recommend'})),
 
     path('article/hot_words/', ArticleRelationViewSet.as_view({'get': 'get_hot_word'})),
+
+    path('advert/details/', AdvertViewSet.as_view({'get': 'retrieve'})),
 
     path('tag/', TagViewSet.as_view({'post': 'create', 'put': 'update', 'delete': 'delete'})),
     path('tag/all/', TagViewSet.as_view({'get': 'get_all_tags'})),

@@ -391,3 +391,106 @@ class ExpressNewsStore(BaseModel):
 
     def __str__(self):
         return self.news_title
+
+
+class AdvertStore(BaseModel):
+    """
+    流云广告
+    """
+    NORMAL_STATUS = 0
+    DELETE_STATUS = -1
+
+    content_fields = ['body',
+                      'price']
+
+    full_content_fields_intro = {
+        'body': '详情',
+        'price': '价格'
+    }
+
+    class Meta:
+        db_table = "leeyum_advert"
+
+    title = models.CharField('广告标题', max_length=1024, null=True, blank=False)
+    pic_urls = models.CharField('图片url', max_length=2048, null=True, blank=False)
+    content = models.CharField('广告内容', max_length=1024 * 10, null=True, blank=True)
+
+    tags = models.CharField('标签 拍平存储', max_length=1024, null=True, blank=True)
+
+    publisher = models.ForeignKey(UserStore, on_delete=models.DO_NOTHING, default=1)
+    publish_time = models.DateTimeField("发布时间", default=timezone.now)
+
+    status = models.IntegerField('广告状态', default=NORMAL_STATUS)
+
+    is_advert = models.BooleanField('广告标志', default=True)
+
+    def __str__(self):
+        return self.title
+
+    def format_content(self, content_details, **kwargs):
+        """
+        将dict => str
+        """
+        format_dict = {}
+        for field in set(self.content_fields):
+            if content_details.get(field):
+                format_dict[field] = content_details.get(field)
+
+        return json.dumps(format_dict)
+
+    def get_content_field_intro(self, field_name):
+        return self.full_content_fields_intro.get(field_name, 'unexpect field')
+
+    def concrete_advert(self):
+        """
+        具象化被拍平的字段
+        例如: '["www.baidu.com"]' ==> ["www.baidu.com"], str => list
+        """
+        self.pic_urls = json.loads(self.pic_urls) if type(self.pic_urls) is str else self.pic_urls
+        self.content = json.loads(self.content) if type(self.content) is str else self.content
+        self.tags = json.loads(self.tags) if type(self.tags) is str else self.tags
+        return self
+
+    def flat_advert(self):
+        """
+        拍平字段 与concrete article作用相反
+        """
+        self.pic_urls = json.dumps(self.pic_urls, ensure_ascii=False) \
+            if type(self.pic_urls) is not str else self.pic_urls
+        self.content = json.dumps(self.content, ensure_ascii=False) \
+            if type(self.content) is not str else self.content
+        self.tags = json.dumps(self.tags, ensure_ascii=False) \
+            if type(self.tags) is not str else self.tags
+        return self
+
+    def to_dict(self, fields=None, exclude=tuple()):
+        result = BaseModel.to_dict(self, fields, exclude)
+        return result
+
+    def generate_es_put_data(self):
+        # 具象化被拍平的字段
+        copy_advert = copy.copy(self)
+        copy_advert.concrete_advert()
+        return {
+            "title": copy_advert.title,
+            "pic_urls": copy_advert.pic_urls,
+            "content": copy_advert.content,
+            "tags": copy_advert.tags,
+            "publish_time": datetime_to_utc(copy_advert.publish_time),
+            "publisher": copy_advert.publisher_id,
+            "is_advert": copy_advert.is_advert,
+        }
+
+    def is_take_off(self):
+        """
+        判断当前广告有没有下架
+        """
+        return self.status == self.DELETE_STATUS
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        """
+        重写save函数，一定先拍平才能存储
+        """
+        self.flat_advert()
+        return super().save(force_insert=False, force_update=False, using=None,
+                            update_fields=None)
