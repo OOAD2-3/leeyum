@@ -333,8 +333,8 @@ class ArticleIndexService(object):
     def _update(self, article_id, data):
         if type(data) is not str:
             data = json.dumps(data)
-        return requests.put(self.update_url.format(doc_id=article_id), data=data,
-                            headers={'Content-Type': 'application/json'})
+        return requests.post(self.update_url.format(doc_id=article_id), data=data,
+                             headers={'Content-Type': 'application/json'})
 
     def _delete(self, article_id):
         return requests.delete(self.doc_url.format(doc_id=article_id))
