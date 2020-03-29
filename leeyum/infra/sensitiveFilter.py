@@ -65,6 +65,6 @@ class SensitiveFilter(object):
 SENSITIVE_FILTER = SensitiveFilter()
 if __name__ == "__main__":
     sf = SensitiveFilter()
-    content = "测试"
+    content = "好的"
     result = sf.filter(content)
     print(result)
