@@ -24,7 +24,7 @@ class AdvertService(object):
         将广告插入到article中article
         5条信息中存在1条广告
         """
-        step = 1
+        step = random.randint(0, 4)
         adverts = AdvertStore.objects.all()
         for advert in adverts:
             advert.concrete_advert()
@@ -32,7 +32,7 @@ class AdvertService(object):
             dict_res['category'] = ['广告', '广告']
             if step < len(article_list):
                 article_list.insert(step, dict_res)
-                step += random.randint(5, 10)
+                step += random.randint(5, 9)
             else:
                 article_list.append(dict_res)
 
