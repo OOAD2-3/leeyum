@@ -40,7 +40,8 @@ class UserCommonViewSet(BaseViewSet):
 
         if not UserStore.objects.filter(phone_number=phone_number):
             username = 'LEEYUM_uID_' + ''.join(phone_number[-4::])
-            UserStore.objects.create_user(username=username, phone_number=phone_number)
+            profile_avatar_url = 'https://leeyum-bucket.oss-cn-hangzhou.aliyuncs.com/default_front_file/%E7%94%A8%E6%88%B7%E5%A4%B4%E5%83%8F.jpg'
+            UserStore.objects.create_user(username=username, phone_number=phone_number, profile_avatar_url=profile_avatar_url)
 
         user = authenticate(phone_number=phone_number, captcha=captcha)
         if user:

@@ -59,7 +59,7 @@ class UserStore(AbstractUser, BaseModel):
         db_table = "auth_user"
 
     phone_number = models.CharField('电话', max_length=11, null=True, blank=False)
-    profile_avatar_url = models.CharField('头像', max_length=256, null=True, blank=True)
+    profile_avatar_url = models.CharField('头像', max_length=256, null=True, blank=True, default='https://leeyum-bucket.oss-cn-hangzhou.aliyuncs.com/default_front_file/%E7%94%A8%E6%88%B7%E5%A4%B4%E5%83%8F.jpg')
     like_article = models.ManyToManyField('ArticleStore')
 
     teams = models.ManyToManyField('ArticleStore', related_name='team_members')
