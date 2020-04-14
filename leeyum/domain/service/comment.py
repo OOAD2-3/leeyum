@@ -21,8 +21,9 @@ class CommentService(object):
         if not comment_article_id or type(comment_article_id) is not int:
             raise ValidationError(
                 '新建comment失败, 参数article_id格式错误 article_id = {}'.format(comment_article_id))
-        if SENSITIVE_FILTER.filter(message) is False:
-            raise ValidationError('新建失败，评论含有敏感词！')
+        res, ret = SENSITIVE_FILTER.filter(message)
+        if res is False:
+            raise ValidationError('新建失败，内容含有敏感词：' + ret)
         try:
             create_comment = CommentStore(comment_message=message, comment_article_id=comment_article_id,
                                           comment_publisher_id=comment_publisher.id)

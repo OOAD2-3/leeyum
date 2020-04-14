@@ -39,11 +39,12 @@ class ArticleService(object):
         if not category_id or type(category_id) is not int:
             raise ValidationError('新建article失败, 参数category_id格式错误 category_id = {}'.format(category_id))
 
-        if SENSITIVE_FILTER.filter(title) is False:
-            raise ValidationError('新建失败，标题含有敏感词！')
-        res, ret = SENSITIVE_FILTER.filter(json.dumps(content_details.get('body')))
-        if not res:
-            raise ValidationError('新建失败，内容含有敏感词：' + ret)
+        title_res, title_ret = SENSITIVE_FILTER.filter(title)
+        if title_res is False:
+            raise ValidationError('新建失败，标题含有敏感词:' + title_ret)
+        body_res, body_ret = SENSITIVE_FILTER.filter(json.dumps(content_details.get('body')))
+        if body_res is False:
+            raise ValidationError('新建失败，内容含有敏感词：' + body_ret)
 
         try:
             create_article = ArticleStore(title=title, publisher_id=creator.id)
